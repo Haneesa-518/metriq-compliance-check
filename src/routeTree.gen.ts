@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as CheckRouteImport } from './routes/check'
 import { Route as IndexRouteImport } from './routes/index'
@@ -16,6 +17,11 @@ import { Route as ReportIdRouteImport } from './routes/report.$id'
 import { Route as AnalysisIdRouteImport } from './routes/analysis.$id'
 import { Route as ApiPublicComplianceCheckRouteImport } from './routes/api/public/compliance-check'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RulesRoute = RulesRouteImport.update({
   id: '/rules',
   path: '/rules',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analysis/$id': typeof AnalysisIdRoute
   '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analysis/$id': typeof AnalysisIdRoute
   '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/analysis/$id': typeof AnalysisIdRoute
   '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/'
     | '/check'
     | '/rules'
+    | '/sitemap.xml'
     | '/analysis/$id'
     | '/report/$id'
     | '/api/public/compliance-check'
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/check'
     | '/rules'
+    | '/sitemap.xml'
     | '/analysis/$id'
     | '/report/$id'
     | '/api/public/compliance-check'
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/check'
     | '/rules'
+    | '/sitemap.xml'
     | '/analysis/$id'
     | '/report/$id'
     | '/api/public/compliance-check'
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckRoute: typeof CheckRoute
   RulesRoute: typeof RulesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AnalysisIdRoute: typeof AnalysisIdRoute
   ReportIdRoute: typeof ReportIdRoute
   ApiPublicComplianceCheckRoute: typeof ApiPublicComplianceCheckRoute
@@ -111,6 +124,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rules': {
       id: '/rules'
       path: '/rules'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckRoute: CheckRoute,
   RulesRoute: RulesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AnalysisIdRoute: AnalysisIdRoute,
   ReportIdRoute: ReportIdRoute,
   ApiPublicComplianceCheckRoute: ApiPublicComplianceCheckRoute,
@@ -167,3 +188,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
