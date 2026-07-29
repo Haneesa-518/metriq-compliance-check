@@ -40,7 +40,8 @@ function RulesPage() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           The legal knowledge layer is stored as structured data, separate from both the AI extraction
           layer and the UI. Rules reference the Legal Metrology (Packaged Commodities) Rules, 2011
-          (Department of Consumer Affairs, Government of India) at rule-number level. No legislative
+          (Department of Consumer Affairs) and, for food products, the Food Safety and Standards
+          labelling regulations (FSSAI) at rule-number level. No legislative
           wording is quoted, and every record below is marked{" "}
           <span className="font-mono">needs_verification</span> until confirmed against the official
           published document.
