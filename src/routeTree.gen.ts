@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as CheckRouteImport } from './routes/check'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportIdRouteImport } from './routes/report.$id'
+import { Route as AnalysisIdRouteImport } from './routes/analysis.$id'
 import { Route as ApiPublicComplianceCheckRouteImport } from './routes/api/public/compliance-check'
 
 const RulesRoute = RulesRouteImport.update({
@@ -18,9 +21,24 @@ const RulesRoute = RulesRouteImport.update({
   path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckRoute = CheckRouteImport.update({
+  id: '/check',
+  path: '/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportIdRoute = ReportIdRouteImport.update({
+  id: '/report/$id',
+  path: '/report/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalysisIdRoute = AnalysisIdRouteImport.update({
+  id: '/analysis/$id',
+  path: '/analysis/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicComplianceCheckRoute =
@@ -32,31 +50,62 @@ const ApiPublicComplianceCheckRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
   '/rules': typeof RulesRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
   '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/rules' | '/api/public/compliance-check'
+  fullPaths:
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/rules' | '/api/public/compliance-check'
-  id: '__root__' | '/' | '/rules' | '/api/public/compliance-check'
+  to:
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
+  id:
+    | '__root__'
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckRoute: typeof CheckRoute
   RulesRoute: typeof RulesRoute
+  AnalysisIdRoute: typeof AnalysisIdRoute
+  ReportIdRoute: typeof ReportIdRoute
   ApiPublicComplianceCheckRoute: typeof ApiPublicComplianceCheckRoute
 }
 
@@ -69,11 +118,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/check': {
+      id: '/check'
+      path: '/check'
+      fullPath: '/check'
+      preLoaderRoute: typeof CheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report/$id': {
+      id: '/report/$id'
+      path: '/report/$id'
+      fullPath: '/report/$id'
+      preLoaderRoute: typeof ReportIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analysis/$id': {
+      id: '/analysis/$id'
+      path: '/analysis/$id'
+      fullPath: '/analysis/$id'
+      preLoaderRoute: typeof AnalysisIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/compliance-check': {
@@ -88,7 +158,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckRoute: CheckRoute,
   RulesRoute: RulesRoute,
+  AnalysisIdRoute: AnalysisIdRoute,
+  ReportIdRoute: ReportIdRoute,
   ApiPublicComplianceCheckRoute: ApiPublicComplianceCheckRoute,
 }
 export const routeTree = rootRouteImport
