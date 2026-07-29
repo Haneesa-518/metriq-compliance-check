@@ -9,38 +9,142 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RulesRouteImport } from './routes/rules'
+import { Route as CheckRouteImport } from './routes/check'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportIdRouteImport } from './routes/report.$id'
+import { Route as AnalysisIdRouteImport } from './routes/analysis.$id'
+import { Route as ApiPublicComplianceCheckRouteImport } from './routes/api/public/compliance-check'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RulesRoute = RulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckRoute = CheckRouteImport.update({
+  id: '/check',
+  path: '/check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportIdRoute = ReportIdRouteImport.update({
+  id: '/report/$id',
+  path: '/report/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalysisIdRoute = AnalysisIdRouteImport.update({
+  id: '/analysis/$id',
+  path: '/analysis/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicComplianceCheckRoute =
+  ApiPublicComplianceCheckRouteImport.update({
+    id: '/api/public/compliance-check',
+    path: '/api/public/compliance-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
+  '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
+  '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
+  '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
+  '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/check': typeof CheckRoute
+  '/rules': typeof RulesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/analysis/$id': typeof AnalysisIdRoute
+  '/report/$id': typeof ReportIdRoute
+  '/api/public/compliance-check': typeof ApiPublicComplianceCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/sitemap.xml'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/sitemap.xml'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
+  id:
+    | '__root__'
+    | '/'
+    | '/check'
+    | '/rules'
+    | '/sitemap.xml'
+    | '/analysis/$id'
+    | '/report/$id'
+    | '/api/public/compliance-check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckRoute: typeof CheckRoute
+  RulesRoute: typeof RulesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AnalysisIdRoute: typeof AnalysisIdRoute
+  ReportIdRoute: typeof ReportIdRoute
+  ApiPublicComplianceCheckRoute: typeof ApiPublicComplianceCheckRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rules': {
+      id: '/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check': {
+      id: '/check'
+      path: '/check'
+      fullPath: '/check'
+      preLoaderRoute: typeof CheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +152,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/report/$id': {
+      id: '/report/$id'
+      path: '/report/$id'
+      fullPath: '/report/$id'
+      preLoaderRoute: typeof ReportIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analysis/$id': {
+      id: '/analysis/$id'
+      path: '/analysis/$id'
+      fullPath: '/analysis/$id'
+      preLoaderRoute: typeof AnalysisIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/compliance-check': {
+      id: '/api/public/compliance-check'
+      path: '/api/public/compliance-check'
+      fullPath: '/api/public/compliance-check'
+      preLoaderRoute: typeof ApiPublicComplianceCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckRoute: CheckRoute,
+  RulesRoute: RulesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AnalysisIdRoute: AnalysisIdRoute,
+  ReportIdRoute: ReportIdRoute,
+  ApiPublicComplianceCheckRoute: ApiPublicComplianceCheckRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
