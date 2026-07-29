@@ -18,7 +18,7 @@ export function Navbar({ right }: { right?: React.ReactNode }) {
             <ScanLine className="size-4" />
           </span>
           <span className="text-sm font-semibold tracking-tight">
-            MitraMet
+            MetriQ
             <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">
               Legal Metrology Compliance Checker
             </span>
@@ -68,7 +68,7 @@ export function Footer() {
     <footer className="mt-16 border-t border-border py-8">
       <div className="mx-auto max-w-[1600px] space-y-2 px-4 text-xs text-muted-foreground sm:px-6">
         <p className="font-semibold text-foreground">
-          MitraMet — compliance-assistance prototype
+          MetriQ — compliance-assistance prototype
         </p>
         <p className="max-w-3xl leading-relaxed">
           This is a hackathon prototype. It does not provide legal advice, is not affiliated with or

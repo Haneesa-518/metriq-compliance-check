@@ -7,13 +7,13 @@ import { LEGAL_RULES } from "@/lib/legal/rules.data";
 export const Route = createFileRoute("/rules")({
   head: () => ({
     meta: [
-      { title: "Rule Library — MitraMet Compliance Checker" },
+      { title: "Rule Library — MetriQ Compliance Checker" },
       {
         name: "description",
         content:
-          "Structured Legal Metrology rule records used by the MitraMet prototype rule engine, each with applicability, source reference and verification status.",
+          "Structured Legal Metrology rule records used by the MetriQ prototype rule engine, each with applicability, source reference and verification status.",
       },
-      { property: "og:title", content: "Rule Library — MitraMet Compliance Checker" },
+      { property: "og:title", content: "Rule Library — MetriQ Compliance Checker" },
       {
         property: "og:description",
         content: "Structured rule records with applicability, source reference and verification status.",
@@ -40,7 +40,8 @@ function RulesPage() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           The legal knowledge layer is stored as structured data, separate from both the AI extraction
           layer and the UI. Rules reference the Legal Metrology (Packaged Commodities) Rules, 2011
-          (Department of Consumer Affairs, Government of India) at rule-number level. No legislative
+          (Department of Consumer Affairs) and, for food products, the Food Safety and Standards
+          labelling regulations (FSSAI) at rule-number level. No legislative
           wording is quoted, and every record below is marked{" "}
           <span className="font-mono">needs_verification</span> until confirmed against the official
           published document.

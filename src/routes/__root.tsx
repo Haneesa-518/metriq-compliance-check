@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MitraMet — AI Legal Metrology Compliance Checker" },
+      { title: "MetriQ — AI Legal Metrology Compliance Checker" },
       {
         name: "description",
         content:

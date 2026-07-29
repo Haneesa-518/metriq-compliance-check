@@ -1,10 +1,10 @@
-# MitraMet — AI Legal Metrology Compliance Checker
+# MetriQ — AI Legal Metrology Compliance Checker
 
 A hackathon MVP that reads a photo of a pre-packaged commodity label, extracts the declarations
 printed on it, and checks them against a **structured Legal Metrology rule dataset** using a
 **deterministic rule engine**.
 
-> **Disclaimer.** MitraMet is a compliance-assistance prototype. It is **not legal advice**, is not
+> **Disclaimer.** MetriQ is a compliance-assistance prototype. It is **not legal advice**, is not
 > affiliated with or certified by any government body, and its output is **not legally binding**.
 > Rule records are marked `needs_verification` until confirmed by a human against the official
 > published documents. A 100% prototype score does **not** guarantee legal compliance.
