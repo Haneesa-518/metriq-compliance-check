@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import type { AnalysisRecord, CheckResult, ExtractedData } from "@/lib/compliance/types";
 import { ComplianceBadge, ConfidenceIndicator } from "@/components/ComplianceBadge";
@@ -149,13 +149,13 @@ export function ComplianceTable({ checks }: { checks: CheckResult[] }) {
                   </td>
                 </tr>
                 {isOpen && (
-                  <tr key={`${c.rule_reference}-detail`} className="border-b border-border bg-surface">
+                  <tr className="border-b border-border bg-surface">
                     <td colSpan={4} className="px-4 py-4">
                       <ExplanationPanel check={c} />
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
