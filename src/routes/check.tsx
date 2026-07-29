@@ -13,13 +13,13 @@ export const Route = createFileRoute("/check")({
   }),
   head: () => ({
     meta: [
-      { title: "Run a Compliance Check — MitraMet" },
+      { title: "Run a Compliance Check — MetriQ" },
       {
         name: "description",
         content:
-          "Upload a JPG or PNG product label to extract declarations and run MitraMet's deterministic Legal Metrology rule checks, or try the synthetic demo cases.",
+          "Upload a JPG or PNG product label to extract declarations and run MetriQ's deterministic Legal Metrology rule checks, or try the synthetic demo cases.",
       },
-      { property: "og:title", content: "Run a Compliance Check — MitraMet" },
+      { property: "og:title", content: "Run a Compliance Check — MetriQ" },
       {
         property: "og:description",
         content: "Upload a product label image and run prototype package-declaration checks.",

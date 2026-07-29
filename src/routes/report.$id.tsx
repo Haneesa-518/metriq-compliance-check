@@ -10,13 +10,13 @@ import type { AnalysisRecord } from "@/lib/compliance/types";
 export const Route = createFileRoute("/report/$id")({
   head: () => ({
     meta: [
-      { title: "Compliance Report — MitraMet" },
+      { title: "Compliance Report — MetriQ" },
       {
         name: "description",
         content:
-          "Printable MitraMet compliance report: extracted declarations, check results, rule references, recommendations and prototype disclaimer.",
+          "Printable MetriQ compliance report: extracted declarations, check results, rule references, recommendations and prototype disclaimer.",
       },
-      { property: "og:title", content: "Compliance Report — MitraMet" },
+      { property: "og:title", content: "Compliance Report — MetriQ" },
       {
         property: "og:description",
         content: "Printable prototype compliance report with rule references and recommendations.",
@@ -69,7 +69,7 @@ function ReportPage() {
       </div>
 
       <header className="border-b border-border pb-4">
-        <h1 className="text-2xl font-semibold">MitraMet — Compliance Report</h1>
+        <h1 className="text-2xl font-semibold">MetriQ — Compliance Report</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Prototype assessment of package declarations for pre-packaged commodities (India)
         </p>
@@ -183,7 +183,7 @@ function ReportPage() {
 
       <Section title="Disclaimer">
         <p className="text-sm leading-relaxed text-muted-foreground">
-          MitraMet is a hackathon prototype offering compliance assistance only. It is not legal
+          MetriQ is a hackathon prototype offering compliance assistance only. It is not legal
           advice, is not affiliated with or certified by any government body, and its output is not
           legally binding. Rule records are marked as requiring verification against the official
           published documents. A score of 100% does not guarantee legal compliance. All findings must

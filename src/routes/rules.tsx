@@ -7,13 +7,13 @@ import { LEGAL_RULES } from "@/lib/legal/rules.data";
 export const Route = createFileRoute("/rules")({
   head: () => ({
     meta: [
-      { title: "Rule Library — MitraMet Compliance Checker" },
+      { title: "Rule Library — MetriQ Compliance Checker" },
       {
         name: "description",
         content:
-          "Structured Legal Metrology rule records used by the MitraMet prototype rule engine, each with applicability, source reference and verification status.",
+          "Structured Legal Metrology rule records used by the MetriQ prototype rule engine, each with applicability, source reference and verification status.",
       },
-      { property: "og:title", content: "Rule Library — MitraMet Compliance Checker" },
+      { property: "og:title", content: "Rule Library — MetriQ Compliance Checker" },
       {
         property: "og:description",
         content: "Structured rule records with applicability, source reference and verification status.",

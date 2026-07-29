@@ -20,13 +20,13 @@ import type { AnalysisRecord } from "@/lib/compliance/types";
 export const Route = createFileRoute("/analysis/$id")({
   head: () => ({
     meta: [
-      { title: "Compliance Analysis — MitraMet" },
+      { title: "Compliance Analysis — MetriQ" },
       {
         name: "description",
         content:
           "Extracted package declarations, deterministic compliance checks with PASS / FAIL / REVIEW status, rule references and recommended actions.",
       },
-      { property: "og:title", content: "Compliance Analysis — MitraMet" },
+      { property: "og:title", content: "Compliance Analysis — MetriQ" },
       {
         property: "og:description",
         content: "Package declaration checks with rule references and recommended actions.",

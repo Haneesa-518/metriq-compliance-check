@@ -8,13 +8,13 @@ import { LEGAL_RULES } from "@/lib/legal/rules.data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MitraMet — AI Legal Metrology Compliance Checker" },
+      { title: "MetriQ — AI Legal Metrology Compliance Checker" },
       {
         name: "description",
         content:
           "Upload a product label and identify potentially missing or problematic mandatory package declarations. Prototype compliance-assistance tool for pre-packaged commodities in India.",
       },
-      { property: "og:title", content: "MitraMet — AI Legal Metrology Compliance Checker" },
+      { property: "og:title", content: "MetriQ — AI Legal Metrology Compliance Checker" },
       {
         property: "og:description",
         content:
@@ -49,7 +49,7 @@ function Landing() {
           <div className="mx-auto max-w-[1600px] px-4 py-20 sm:px-6 lg:py-28">
             <p className="label-caps">Pre-packaged commodities · India · Prototype</p>
             <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">
-              Check Package Compliance with AI
+              Analyze Product Compliance
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
               Upload a product label and identify potentially missing or problematic mandatory
