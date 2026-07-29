@@ -132,9 +132,8 @@ export function ComplianceTable({ checks }: { checks: CheckResult[] }) {
           {checks.map((c) => {
             const isOpen = open === c.rule_reference;
             return (
-              <>
+              <Fragment key={c.rule_reference}>
                 <tr
-                  key={c.rule_reference}
                   onClick={() => setOpen(isOpen ? null : c.rule_reference)}
                   className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-accent/50"
                 >
