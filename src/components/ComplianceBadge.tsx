@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { CheckStatus } from "@/lib/compliance/types";
+import { bandFor, type CheckStatus, type ConfidenceBand } from "@/lib/compliance/types";
 
 const MAP: Record<CheckStatus, { text: string; cls: string }> = {
   PASS: { text: "PASS", cls: "bg-pass/15 text-pass border-pass/40" },
