@@ -53,8 +53,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (declarations on every package)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-MANUFACTURER",
@@ -70,8 +70,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (declarations on every package)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-ADDRESS",
@@ -87,8 +87,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (declarations on every package)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-NET-QUANTITY",
@@ -100,12 +100,12 @@ export const LEGAL_RULES: LegalRule[] = [
     field: "net_quantity",
     category: "legal_metrology",
     evaluated: true,
-    validation_type: "format",
+    validation_type: "structure",
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 read with Rule 8 (net quantity declaration)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-MRP",
@@ -121,8 +121,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (retail sale price declaration)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-CONSUMER-CARE",
@@ -138,8 +138,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (consumer care details)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-DATE",
@@ -155,8 +155,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (date declaration)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-COUNTRY-OF-ORIGIN",
@@ -173,8 +173,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (imported packages)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "LMPCR-2011-R6-IMPORTER",
@@ -191,8 +191,8 @@ export const LEGAL_RULES: LegalRule[] = [
     source_document:
       "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
     source_reference: "Rule 6 (imported packages)",
-    status: "NEEDS_VERIFICATION",
-    last_verified: null,
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
   },
   {
     rule_id: "FSSLD-2020-VEG-NONVEG",
@@ -466,8 +466,44 @@ export const LEGAL_RULES: LegalRule[] = [
     status: "NEEDS_VERIFICATION",
     last_verified: null,
   },
+  {
+    rule_id: "LMPCR-2011-R6-UNIT-SALE-PRICE",
+    rule_code: "PCR/6/unit-sale-price",
+    title: "Unit sale price",
+    requirement:
+      "Where required, the package is expected to declare the sale price per unit of weight, measure or number (for example per kg, per litre or per piece).",
+    applicability:
+      "Pre-packaged commodities intended for retail sale in India where a unit sale price declaration is expected.",
+    field: "unit_sale_price",
+    category: "legal_metrology",
+    evaluated: true,
+    validation_type: "format",
+    source_document:
+      "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, Government of India",
+    source_reference: "Rule 6 read with Rule 2(r) (unit sale price)",
+    status: "VERIFIED",
+    last_verified: "2026-07-30",
+  },
 ];
 
 export function getRule(ruleId: string): LegalRule | undefined {
   return LEGAL_RULES.find((r) => r.rule_id === ruleId);
+}
+
+/**
+ * The verified core rule set: packaged-commodity declarations that a human
+ * reviewer has checked against the official published rule numbers and that the
+ * deterministic engine actually evaluates. Verification is at rule-number and
+ * requirement-summary level only — it is not a legal opinion.
+ */
+export const VERIFIED_CORE_RULES = LEGAL_RULES.filter((r) => r.status === "VERIFIED");
+
+export const EVALUATED_RULES = LEGAL_RULES.filter((r) => r.evaluated);
+
+export function rulesInCategory(category: RuleCategory): LegalRule[] {
+  return LEGAL_RULES.filter((r) => r.category === category);
+}
+
+export function ruleForField(field: string): LegalRule | undefined {
+  return LEGAL_RULES.find((r) => r.field === field);
 }
