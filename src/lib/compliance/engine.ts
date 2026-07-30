@@ -437,8 +437,13 @@ export function check_fssai_licence(ctx: Ctx) {
 }
 
 export function check_best_before(ctx: Ctx) {
+  const raw = ctx.data.raw_text || "";
   return foodCheck(ctx, "best_before", (v) => [
-    { label: "Best before / use by wording identified", passed: /best\s*before|use\s*by|expiry|exp\b/i.test(v), severity: "soft" },
+    {
+      label: "Best before / use by wording identified",
+      passed: /best\s*before|use\s*by|expiry|exp\b/i.test(`${v} ${raw}`),
+      severity: "soft",
+    },
     { label: "Date or duration value detected", passed: /\d/.test(v), severity: "soft" },
   ]);
 }
