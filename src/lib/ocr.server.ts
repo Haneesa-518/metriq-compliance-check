@@ -25,12 +25,18 @@ Return strict JSON with this shape:
     "address": {"value": string|null, "confidence": number},
     "net_quantity": {"value": string|null, "confidence": number},
     "mrp": {"value": string|null, "confidence": number},
+    "unit_sale_price": {"value": string|null, "confidence": number},
     "consumer_care": {"value": string|null, "confidence": number},
     "country_of_origin": {"value": string|null, "confidence": number},
-    "date_of_manufacture": {"value": string|null, "confidence": number}
+    "date_of_manufacture": {"value": string|null, "confidence": number},
+    "veg_nonveg_mark": {"value": string|null, "confidence": number},
+    "ingredients_list": {"value": string|null, "confidence": number},
+    "fssai_licence": {"value": string|null, "confidence": number},
+    "best_before": {"value": string|null, "confidence": number}
   }
 }
-Use null when a value is not visible. confidence is 0..1 and reflects how clearly you could read the value.
+Use null when a value is not visible. Never calculate or infer a value that is not printed (for example, never derive unit sale price from MRP).
+confidence is 0..1 and reflects how clearly you could read the value.
 Output JSON only, no markdown fences.`;
 
 export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
