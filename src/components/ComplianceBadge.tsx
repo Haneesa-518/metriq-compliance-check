@@ -29,15 +29,21 @@ export function ComplianceBadge({
   );
 }
 
-export function ConfidenceIndicator({ value }: { value: number }) {
+/**
+ * Extraction confidence is an internal heuristic signal (how well the value
+ * matched a structured pattern) — never an OCR probability or AI accuracy.
+ */
+export function ConfidenceIndicator({ value, band }: { value: number; band?: ConfidenceBand }) {
+  const b: ConfidenceBand = band ?? bandFor(value);
   const pct = Math.round(value * 100);
-  const tone = pct >= 70 ? "bg-pass" : pct >= 40 ? "bg-review" : "bg-fail";
+  const tone = b === "HIGH" ? "bg-pass" : b === "MEDIUM" ? "bg-review" : "bg-fail";
+  const text = b === "HIGH" ? "text-pass" : b === "MEDIUM" ? "text-review" : "text-fail";
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+    <div className="flex items-center gap-2" title={`Internal extraction-confidence signal: ${pct}/100`}>
+      <div className="h-1.5 w-12 overflow-hidden rounded-full bg-muted">
         <div className={cn("h-full rounded-full", tone)} style={{ width: `${pct}%` }} />
       </div>
-      <span className="font-mono text-xs text-muted-foreground">{pct}%</span>
+      <span className={cn("font-mono text-[10px] font-semibold tracking-wider", text)}>{b}</span>
     </div>
   );
 }
