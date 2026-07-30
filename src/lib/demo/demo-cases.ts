@@ -96,7 +96,7 @@ Manufactured by: Sample Bakers Private Limited
 Consumer care: care@samplebakers.example / 1800 444 5555
 Mfg Date: 01/2026
 Best Before: 9 months from packing
-FSSAI Licence No. 100120310
+FSSAI Licence No. 1001203100
 Synthetic sample data for demonstration`,
   },
   {

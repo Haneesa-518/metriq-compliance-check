@@ -262,25 +262,39 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
   }
 
   const detected = FIELD_KEYS.filter((k) => fields[k].value).length;
-  const ocr_confidence =
-    text.trim().length < 20 ? 0.2 : Math.min(0.95, 0.35 + detected / FIELD_KEYS.length);
+  const ocr_confidence = textQuality(text, detected);
 
   return {
     raw_text: text,
     fields,
-    ocr_confidence: degradedText(text) ? Math.min(ocr_confidence, 0.4) : ocr_confidence,
+    ocr_confidence,
     engine:
       source === "user_corrected" ? "rule-based extractor (user-corrected text)" : "rule-based extractor",
     context: detectContext(text, fields),
   };
 }
 
-/** Heuristic detector for garbled / low-quality OCR output. */
+/**
+ * Heuristic detector for garbled / low-quality extracted text. It looks for
+ * OCR gap markers (runs of dots, question marks) rather than ordinary
+ * punctuation, so decimal values are not treated as unreadable.
+ */
 export function degradedText(text: string): boolean {
   const stripped = text.replace(/\s/g, "");
   if (!stripped) return true;
-  const dots = (stripped.match(/[.?]/g) ?? []).length;
-  return dots / stripped.length > 0.12;
+  const garble = (stripped.match(/\.{2,}|\?/g) ?? []).join("").length;
+  return garble / stripped.length > 0.05;
+}
+
+/**
+ * Overall extraction-quality signal (0..1). This is an internal heuristic used
+ * only to decide whether the absence of a declaration can be trusted — it is
+ * not an OCR probability or a measure of AI accuracy.
+ */
+export function textQuality(text: string, detectedFields: number): number {
+  if (text.trim().length < 20) return 0.2;
+  if (degradedText(text)) return 0.25;
+  return Math.min(0.95, 0.55 + (detectedFields / FIELD_KEYS.length) * 0.4);
 }
 
 /** Merge AI-extracted fields over the deterministic baseline. */
@@ -312,7 +326,7 @@ export function mergeExtraction(
   return {
     ...base,
     fields,
-    ocr_confidence: Math.min(0.95, 0.35 + detected / FIELD_KEYS.length),
+    ocr_confidence: textQuality(base.raw_text, detected),
     engine: "AI vision OCR + rule-based extractor",
     context: detectContext(base.raw_text, fields),
   };
