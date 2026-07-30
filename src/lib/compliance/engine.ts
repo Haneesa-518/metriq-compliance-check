@@ -1,234 +1,476 @@
-import { LEGAL_RULES, type LegalRule } from "@/lib/legal/rules.data";
-import type {
-  CheckResult,
-  CheckStatus,
-  ComplianceSummary,
-  ExtractedData,
+import { LEGAL_RULES, ruleForField, type LegalRule } from "@/lib/legal/rules.data";
+import { degradedText } from "./extract";
+import {
+  bandFor,
+  type CategorySummary,
+  type CheckResult,
+  type CheckStatus,
+  type ComplianceSummary,
+  type ExtractedData,
+  type PackageContext,
+  type ValidationStep,
 } from "./types";
 
-const CONFIDENT = 0.7;
+const LOW_QUALITY = 0.5;
+
+/** Internal layer with severity — hard failures fail, soft failures need review. */
+interface Layer {
+  label: string;
+  passed: boolean | null;
+  severity: "hard" | "soft";
+}
 
 interface Ctx {
   data: ExtractedData;
-  /** true when the package appears to be an imported package */
-  isImported: boolean;
+  pkg: PackageContext;
 }
 
 function ruleFor(field: string): LegalRule {
-  const rule = LEGAL_RULES.find((r) => r.field === field);
+  const rule = ruleForField(field);
   if (!rule) throw new Error(`Unknown rule for field: ${field}`);
   return rule;
 }
 
-function base(
+function steps(layers: Layer[]): ValidationStep[] {
+  return layers.map(({ label, passed }) => ({ label, passed }));
+}
+
+function build(
   rule: LegalRule,
   status: CheckStatus,
   message: string,
   detected: string | null,
+  evidence: string | null,
   confidence: number,
   action: string,
+  layers: Layer[],
+  applicability = rule.applicability,
 ): CheckResult {
+  const conf = Math.round(Math.max(0, Math.min(1, confidence)) * 100) / 100;
   return {
     status,
     field: rule.field,
     label: rule.title,
+    category: rule.category,
     message,
     detected,
+    evidence,
     expected: rule.requirement,
     rule_reference: rule.rule_id,
-    confidence: Math.round(confidence * 100) / 100,
+    confidence: conf,
+    confidence_band: bandFor(conf),
+    validations: steps(layers),
+    applicability,
     recommended_action: action,
+    requires_human_review: status === "REVIEW",
   };
 }
 
-/** Generic presence check shared by most declarations. */
-function presenceCheck(ctx: Ctx, field: string): CheckResult {
-  const rule = ruleFor(field);
-  const f = ctx.data.fields[field];
+function notApplicable(rule: LegalRule, reason: string, action: string): CheckResult {
+  return build(
+    rule,
+    "NOT_APPLICABLE",
+    reason,
+    null,
+    null,
+    1,
+    action,
+    [{ label: "Rule applicability", passed: false, severity: "soft" }],
+    reason,
+  );
+}
+
+/**
+ * Layered validation: presence → readability → format/structure → confidence.
+ * A missing value is only a FAIL when the extracted text was good enough to
+ * trust its absence; otherwise the result is REVIEW for human verification.
+ */
+function evaluate(
+  ctx: Ctx,
+  fieldKey: string,
+  formatLayers: (value: string) => Layer[] = () => [],
+): CheckResult {
+  const rule = ruleFor(fieldKey);
+  const f = ctx.data.fields[fieldKey];
   const value = f?.value ?? null;
   const conf = f?.confidence ?? 0;
+  const evidence = f?.evidence ?? null;
+  const textPoor = ctx.data.ocr_confidence < LOW_QUALITY || degradedText(ctx.data.raw_text);
 
-  if (value && conf >= CONFIDENT) {
-    return base(
+  if (!value) {
+    const presence: Layer[] = [{ label: "Declaration present in extracted text", passed: false, severity: "hard" }];
+    if (textPoor) {
+      return build(
+        rule,
+        "REVIEW",
+        "The declaration could not be located, but the extracted text quality is too low to conclude that it is absent.",
+        null,
+        null,
+        ctx.data.ocr_confidence,
+        "Re-upload a sharper image or edit the extracted text, then re-run the analysis.",
+        [
+          { label: "Declaration present in extracted text", passed: null, severity: "hard" },
+          { label: "Extraction quality sufficient to judge absence", passed: false, severity: "soft" },
+        ],
+      );
+    }
+    return build(
       rule,
-      "PASS",
-      `A declaration was identified on the package for "${rule.title}".`,
-      value,
-      conf,
-      "No action required for the prototype check. Confirm legibility on the physical package.",
-    );
-  }
-  if (value) {
-    return base(
-      rule,
-      "REVIEW",
-      "A candidate declaration was found, but extraction confidence is low.",
-      value,
-      conf,
-      "Verify this declaration manually against the physical package.",
-    );
-  }
-  if (ctx.data.ocr_confidence < 0.5) {
-    return base(
-      rule,
-      "REVIEW",
-      "The declaration could not be confidently identified because overall text extraction quality is low.",
+      "FAIL",
+      "No corresponding declaration was detected in the extracted text.",
+      null,
       null,
       ctx.data.ocr_confidence,
-      "Re-upload a sharper image, or verify the original package manually.",
+      "Verify the physical package. If the declaration is genuinely absent, add it and escalate for professional review.",
+      presence,
     );
   }
-  return base(
+
+  const layers: Layer[] = [
+    { label: "Declaration present in extracted text", passed: true, severity: "hard" },
+    { label: "Extracted value is readable", passed: !degradedText(value), severity: "soft" },
+    ...formatLayers(value),
+  ];
+
+  const hardFail = layers.find((l) => l.passed === false && l.severity === "hard");
+  if (hardFail) {
+    return build(
+      rule,
+      "FAIL",
+      `A declaration was found, but it did not satisfy a required validation: ${hardFail.label}.`,
+      value,
+      evidence,
+      conf,
+      "Correct the declaration format on the package, or correct the extracted text and re-run the analysis.",
+      layers,
+    );
+  }
+
+  const softIssue = layers.find((l) => l.passed !== true);
+  const band = bandFor(conf);
+  if (softIssue) {
+    return build(
+      rule,
+      "REVIEW",
+      `A declaration was found, but one validation could not be confirmed: ${softIssue.label}.`,
+      value,
+      evidence,
+      conf,
+      "Verify this declaration manually against the physical package.",
+      layers,
+    );
+  }
+  if (band === "LOW") {
+    return build(
+      rule,
+      "REVIEW",
+      "A declaration was found, but extraction evidence is weak, so it requires human verification.",
+      value,
+      evidence,
+      conf,
+      "Verify this declaration manually against the physical package.",
+      layers,
+    );
+  }
+  return build(
     rule,
-    "FAIL",
-    "No corresponding declaration was detected in the extracted text.",
-    null,
-    ctx.data.ocr_confidence,
-    "Check the physical package. If the declaration is genuinely absent, escalate for professional review.",
+    "PASS",
+    "A declaration was identified and satisfied every automated validation for this rule.",
+    value,
+    evidence,
+    conf,
+    "No action required from the automated screening. Confirm legibility on the physical package.",
+    layers,
   );
 }
 
-export function check_product_name(ctx: Ctx): CheckResult {
-  return presenceCheck(ctx, "product_name");
+// ---------------------------------------------------------------- LM checks
+
+const QTY_RE =
+  /^(\d+(?:[.,]\d+)?)\s*(kg|g|gm|gms|gram|grams|mg|l|ltr|litre|litres|liter|liters|ml|n|nos|no|pcs|piece|pieces)$/i;
+
+export function check_product_name(ctx: Ctx) {
+  return evaluate(ctx, "product_name", (v) => [
+    { label: "Value looks like a commodity name (not only a number)", passed: /[a-z]{3}/i.test(v), severity: "soft" },
+  ]);
 }
 
-export function check_net_quantity(ctx: Ctx): CheckResult {
-  const rule = ruleFor("net_quantity");
-  const f = ctx.data.fields.net_quantity;
-  if (!f?.value) return presenceCheck(ctx, "net_quantity");
-  const formatted = /^\d+(?:[.,]\d+)?\s*(kg|g|gm|gms|gram|grams|mg|l|ltr|litre|litres|liter|liters|ml|n|nos|no|pcs|piece|pieces)$/i.test(
-    f.value.trim(),
-  );
-  if (!formatted) {
-    return base(
-      rule,
-      "REVIEW",
-      "A quantity-like value was detected but it does not match the expected number + standard unit pattern.",
-      f.value,
-      f.confidence,
-      "Confirm the net quantity declaration and its unit on the physical package.",
-    );
-  }
-  return presenceCheck(ctx, "net_quantity");
+export function check_net_quantity(ctx: Ctx) {
+  return evaluate(ctx, "net_quantity", (v) => {
+    const t = v.trim();
+    const m = t.match(QTY_RE);
+    const hasNumber = /\d/.test(t);
+    const hasUnitWord = /[a-z]/i.test(t);
+    return [
+      { label: "Numeric quantity detected", passed: hasNumber, severity: "hard" },
+      { label: "Unit of weight / measure / number detected", passed: hasUnitWord, severity: "soft" },
+      { label: "Unit is a recognised standard unit", passed: Boolean(m), severity: "soft" },
+      { label: "Number + unit form a valid quantity declaration", passed: Boolean(m), severity: "soft" },
+    ];
+  });
 }
 
-export function check_mrp(ctx: Ctx): CheckResult {
-  const rule = ruleFor("mrp");
-  const f = ctx.data.fields.mrp;
-  if (!f?.value) return presenceCheck(ctx, "mrp");
-  const hasNumber = /\d/.test(f.value);
-  const hasCurrency = /₹|rs\.?|inr/i.test(f.value);
-  if (!hasNumber) {
-    return base(
-      rule,
-      "REVIEW",
-      "A price declaration was detected but no numeric value could be read.",
-      f.value,
-      f.confidence,
-      "Verify the retail sale price on the physical package.",
-    );
-  }
-  if (!hasCurrency) {
-    return base(
-      rule,
-      "REVIEW",
-      "A numeric price was detected, but the currency indication could not be confirmed from the extracted text.",
-      f.value,
-      f.confidence,
-      "Confirm that the retail sale price is declared in the prescribed form on the package.",
-    );
-  }
-  return presenceCheck(ctx, "mrp");
+export function check_mrp(ctx: Ctx) {
+  const raw = ctx.data.raw_text || "";
+  return evaluate(ctx, "mrp", (v) => {
+    const numeric = /\d/.test(v);
+    const parseable = Number.isFinite(Number(v.replace(/[^\d.]/g, ""))) && /\d/.test(v);
+    const currency = /₹|rs\.?|inr/i.test(v) || /₹|rs\.?|inr/i.test(raw);
+    const wording = /m\.?r\.?p\.?|maximum\s+retail\s+price|retail\s+sale\s+price/i.test(raw);
+    return [
+      { label: "Price value detected", passed: numeric, severity: "hard" },
+      { label: "Value is numerically parseable", passed: parseable, severity: "hard" },
+      { label: "Currency indication present", passed: currency, severity: "soft" },
+      { label: "Retail-sale-price wording identified", passed: wording, severity: "soft" },
+    ];
+  });
+}
+
+export function check_unit_sale_price(ctx: Ctx) {
+  const raw = ctx.data.raw_text || "";
+  return evaluate(ctx, "unit_sale_price", (v) => {
+    const numeric = /\d/.test(v);
+    const perUnit = /\bper\b|\//i.test(v);
+    const unit = /\b(kg|g|gm|l|ltr|litre|liter|ml|unit|pc|pcs|piece|n)\b/i.test(v);
+    const wording = /unit\s*sale\s*price|price\s*per\s*unit|unit\s*price/i.test(raw);
+    return [
+      { label: "Price value detected", passed: numeric, severity: "hard" },
+      { label: "Per-unit structure detected (e.g. per kg / per litre)", passed: perUnit, severity: "soft" },
+      { label: "Recognised unit of measure detected", passed: unit, severity: "soft" },
+      { label: "Unit-sale-price wording identified", passed: wording, severity: "soft" },
+    ];
+  });
 }
 
 export function check_manufacturer_details(ctx: Ctx): CheckResult {
   const rule = ruleFor("manufacturer");
   const mfg = ctx.data.fields.manufacturer;
   const packer = ctx.data.fields.packer;
-  const candidate = mfg?.value ?? packer?.value ?? null;
-  const conf = mfg?.value ? mfg.confidence : (packer?.confidence ?? 0);
-  if (candidate && conf >= CONFIDENT) {
-    return base(
-      rule,
-      "PASS",
-      mfg?.value
-        ? "A manufacturer declaration was identified."
-        : "No manufacturer declaration was found, but a packer declaration was identified.",
-      candidate,
-      conf,
-      "Confirm the entity name and completeness of the declaration on the physical package.",
-    );
-  }
-  if (candidate) {
-    return base(
+  const importer = ctx.data.fields.importer;
+  const address = ctx.data.fields.address;
+  const chosen = mfg?.value ? mfg : packer?.value ? packer : importer?.value ? importer : null;
+
+  if (!chosen?.value) return evaluate(ctx, "manufacturer");
+
+  const layers: Layer[] = [
+    { label: "Manufacturer / packer / importer identity present", passed: true, severity: "hard" },
+    { label: "Identity value is readable", passed: !degradedText(chosen.value), severity: "soft" },
+    {
+      label: "Identity looks like an entity name",
+      passed: /[a-z]{3}/i.test(chosen.value),
+      severity: "soft",
+    },
+    { label: "Address information present", passed: Boolean(address?.value), severity: "soft" },
+  ];
+
+  const softIssue = layers.find((l) => l.passed !== true);
+  const conf = chosen.confidence;
+  if (softIssue) {
+    return build(
       rule,
       "REVIEW",
-      "A responsible-entity declaration was partially detected with low confidence.",
-      candidate,
+      `A responsible-entity declaration was found, but one validation could not be confirmed: ${softIssue.label}.`,
+      chosen.value,
+      chosen.evidence,
       conf,
-      "Verify the manufacturer / packer declaration manually.",
+      "Verify the manufacturer / packer name together with the complete address on the package.",
+      layers,
     );
   }
-  return presenceCheck(ctx, "manufacturer");
-}
-
-export function check_address(ctx: Ctx): CheckResult {
-  return presenceCheck(ctx, "address");
-}
-
-export function check_consumer_care(ctx: Ctx): CheckResult {
-  return presenceCheck(ctx, "consumer_care");
-}
-
-export function check_date_of_manufacture(ctx: Ctx): CheckResult {
-  return presenceCheck(ctx, "date_of_manufacture");
-}
-
-export function check_importer_details(ctx: Ctx): CheckResult {
-  const rule = ruleFor("importer");
-  if (!ctx.isImported) {
-    return base(
+  if (bandFor(conf) === "LOW") {
+    return build(
       rule,
-      "NOT_APPLICABLE",
-      "No indication of an imported package was found, so this conditional declaration was not evaluated.",
-      null,
-      1,
+      "REVIEW",
+      "A responsible-entity declaration was found with weak extraction evidence.",
+      chosen.value,
+      chosen.evidence,
+      conf,
+      "Verify the manufacturer / packer declaration manually.",
+      layers,
+    );
+  }
+  return build(
+    rule,
+    "PASS",
+    mfg?.value
+      ? "A manufacturer declaration with accompanying address information was identified."
+      : "No manufacturer declaration was found, but a packer/importer declaration with address information was identified.",
+    chosen.value,
+    chosen.evidence,
+    conf,
+    "No action required from the automated screening. Confirm the entity details on the physical package.",
+    layers,
+  );
+}
+
+export function check_address(ctx: Ctx) {
+  return evaluate(ctx, "address", (v) => [
+    { label: "Address contains locality / street detail", passed: v.length > 10, severity: "soft" },
+    { label: "PIN code detected", passed: /\b\d{6}\b/.test(v), severity: "soft" },
+  ]);
+}
+
+export function check_consumer_care(ctx: Ctx) {
+  const raw = ctx.data.raw_text || "";
+  return evaluate(ctx, "consumer_care", (v) => {
+    const email = /[\w.+-]+@[\w-]+\.[\w.]+/.test(v);
+    const phone = /\d{6,}/.test(v.replace(/[\s-]/g, ""));
+    return [
+      { label: "Contact pattern detected (e-mail or telephone)", passed: email || phone, severity: "hard" },
+      { label: "E-mail address detected", passed: email, severity: "soft" },
+      { label: "Telephone / helpline number detected", passed: phone, severity: "soft" },
+      {
+        label: "Consumer-care wording identified",
+        passed: /consumer\s*care|customer\s*care|complaint|helpline/i.test(raw),
+        severity: "soft",
+      },
+    ];
+  });
+}
+
+export function check_date_of_manufacture(ctx: Ctx) {
+  return evaluate(ctx, "date_of_manufacture", (v) => {
+    const numericMonthYear = /^(0?[1-9]|1[0-2])\s*[/\-.]\s*(20)?\d{2}$/.test(v.trim());
+    const namedMonth = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(v);
+    const hasYear = /\d{2,4}/.test(v);
+    return [
+      { label: "Date-like value detected", passed: hasYear, severity: "hard" },
+      {
+        label: "Value matches an acceptable month/year pattern",
+        passed: numericMonthYear || namedMonth,
+        severity: "soft",
+      },
+    ];
+  });
+}
+
+export function check_importer_details(ctx: Ctx) {
+  const rule = ruleFor("importer");
+  if (!ctx.pkg.is_imported) {
+    return notApplicable(
+      rule,
+      "Product classified as domestic based on available label information, so the importer declaration was not evaluated.",
       "If the commodity is in fact imported, re-run the check with a clearer image of the import declaration.",
     );
   }
-  return presenceCheck(ctx, "importer");
+  return evaluate(ctx, "importer", (v) => [
+    { label: "Importer identity looks like an entity name", passed: /[a-z]{3}/i.test(v), severity: "soft" },
+    {
+      label: "Address information present",
+      passed: Boolean(ctx.data.fields.address?.value),
+      severity: "soft",
+    },
+  ]);
 }
 
-export function check_country_of_origin(ctx: Ctx): CheckResult {
+export function check_country_of_origin(ctx: Ctx) {
   const rule = ruleFor("country_of_origin");
-  if (!ctx.isImported) {
-    return base(
+  if (!ctx.pkg.is_imported) {
+    return notApplicable(
       rule,
-      "NOT_APPLICABLE",
-      "No indication of an imported package was found, so this conditional declaration was not evaluated.",
-      null,
-      1,
+      "Product classified as domestic based on available label information, so the country-of-origin declaration was not evaluated.",
       "If the commodity is imported, verify the country-of-origin declaration manually.",
     );
   }
-  return presenceCheck(ctx, "country_of_origin");
+  return evaluate(ctx, "country_of_origin", (v) => [
+    { label: "Country name detected", passed: /[a-z]{3}/i.test(v), severity: "soft" },
+  ]);
+}
+
+// -------------------------------------------------------------- food checks
+
+/** Food rules only run when the label indicates a food product. */
+function foodCheck(
+  ctx: Ctx,
+  fieldKey: string,
+  formatLayers: (value: string) => Layer[] = () => [],
+): CheckResult {
+  const rule = ruleFor(fieldKey);
+  if (!ctx.pkg.is_food) {
+    return notApplicable(
+      rule,
+      "No food-product indicators were detected on the label, so this food-labelling rule was not evaluated.",
+      "If this is a pre-packaged food, correct the extracted text so food declarations are visible and re-run the analysis.",
+    );
+  }
+  const result = evaluate(ctx, fieldKey, formatLayers);
+  // Uncertain food classification must never harden into a FAIL.
+  if (result.status === "FAIL" && ctx.pkg.food_certainty === "uncertain") {
+    return {
+      ...result,
+      status: "REVIEW",
+      requires_human_review: true,
+      message:
+        "The product was only tentatively classified as a food item and this declaration was not detected, so the result requires human verification.",
+      recommended_action:
+        "Confirm whether this is a pre-packaged food and whether the declaration exists on the package.",
+    };
+  }
+  return result;
+}
+
+export function check_veg_nonveg(ctx: Ctx) {
+  return foodCheck(ctx, "veg_nonveg_mark", (v) => [
+    {
+      label: "Vegetarian / non-vegetarian wording identified",
+      passed: /non[\s-]?veg|vegetarian/i.test(v),
+      severity: "soft",
+    },
+  ]);
+}
+
+export function check_ingredients(ctx: Ctx) {
+  return foodCheck(ctx, "ingredients_list", (v) => [
+    { label: "Ingredient text detected", passed: /[a-z]{3}/i.test(v), severity: "hard" },
+    { label: "Multiple ingredients listed (comma separated)", passed: v.includes(","), severity: "soft" },
+  ]);
+}
+
+export function check_fssai_licence(ctx: Ctx) {
+  return foodCheck(ctx, "fssai_licence", (v) => {
+    const digits = v.replace(/\D/g, "");
+    return [
+      { label: "Numeric licence number detected", passed: digits.length > 0, severity: "hard" },
+      { label: "Licence number has 14 digits", passed: digits.length === 14, severity: "soft" },
+    ];
+  });
+}
+
+export function check_best_before(ctx: Ctx) {
+  return foodCheck(ctx, "best_before", (v) => [
+    { label: "Best before / use by wording identified", passed: /best\s*before|use\s*by|expiry|exp\b/i.test(v), severity: "soft" },
+    { label: "Date or duration value detected", passed: /\d/.test(v), severity: "soft" },
+  ]);
 }
 
 const CHECKS = [
   check_product_name,
   check_net_quantity,
   check_mrp,
+  check_unit_sale_price,
   check_manufacturer_details,
   check_address,
   check_consumer_care,
   check_date_of_manufacture,
   check_importer_details,
   check_country_of_origin,
+  check_veg_nonveg,
+  check_ingredients,
+  check_fssai_licence,
+  check_best_before,
 ];
 
-function detectImported(data: ExtractedData): boolean {
-  if (data.fields.importer?.value || data.fields.country_of_origin?.value) return true;
-  return /imported\s+by|country\s+of\s+origin|importer/i.test(data.raw_text || "");
+function emptyCategory(): CategorySummary {
+  return { passed: 0, failed: 0, review: 0, not_applicable: 0 };
+}
+
+function tally(checks: CheckResult[]): CategorySummary {
+  return {
+    passed: checks.filter((c) => c.status === "PASS").length,
+    failed: checks.filter((c) => c.status === "FAIL").length,
+    review: checks.filter((c) => c.status === "REVIEW").length,
+    not_applicable: checks.filter((c) => c.status === "NOT_APPLICABLE").length,
+  };
 }
 
 export function summarize(checks: CheckResult[]): ComplianceSummary {
@@ -238,11 +480,15 @@ export function summarize(checks: CheckResult[]): ComplianceSummary {
   const review = applicableChecks.filter((c) => c.status === "REVIEW").length;
   const applicable = applicableChecks.length;
 
-  // Transparent scoring: PASS = 1 point, REVIEW = 0.5 point, FAIL = 0 points.
+  // Transparent screening coverage: PASS = 1, REVIEW = 0.5, FAIL = 0,
+  // NOT_APPLICABLE excluded entirely from the denominator.
   const score = applicable === 0 ? 0 : Math.round(((passed + review * 0.5) / applicable) * 100);
 
   const overall: ComplianceSummary["overall"] =
     failed > 0 ? "NON_COMPLIANT" : review > 0 ? "NEEDS_REVIEW" : "COMPLIANT";
+
+  const lm = checks.filter((c) => c.category === "legal_metrology");
+  const food = checks.filter((c) => c.category === "food_labelling");
 
   return {
     applicable,
@@ -252,6 +498,14 @@ export function summarize(checks: CheckResult[]): ComplianceSummary {
     not_applicable: checks.length - applicable,
     score,
     overall,
+    by_category: {
+      legal_metrology: lm.length ? tally(lm) : emptyCategory(),
+      food_labelling: food.length ? tally(food) : emptyCategory(),
+    },
+    critical_issues: checks
+      .filter((c) => c.status === "FAIL")
+      .map((c) => `${c.label}: ${c.message}`),
+    human_review_items: review,
   };
 }
 
@@ -270,7 +524,14 @@ export function buildRecommendations(checks: CheckResult[]): string[] {
 
 /** Deterministic rule engine entry point. */
 export function runRuleEngine(data: ExtractedData) {
-  const ctx: Ctx = { data, isImported: detectImported(data) };
+  const pkg: PackageContext = data.context ?? {
+    is_imported: /imported\s+by|country\s+of\s+origin|importer/i.test(data.raw_text || ""),
+    imported_signal: null,
+    is_food: false,
+    food_signal: null,
+    food_certainty: "certain",
+  };
+  const ctx: Ctx = { data, pkg };
   const checks = CHECKS.map((fn) => fn(ctx));
   return {
     checks,
@@ -278,3 +539,5 @@ export function runRuleEngine(data: ExtractedData) {
     recommendations: buildRecommendations(checks),
   };
 }
+
+export { LEGAL_RULES };
