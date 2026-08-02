@@ -14,9 +14,14 @@ const AnalyzeImageInput = z.object({
     .max(Math.ceil(MAX_IMAGE_BYTES * 1.4), "Image is too large (max 8 MB)."),
 });
 
+const AnalyzeUrlInput = z.object({
+  url: z.string().trim().min(4).max(2048),
+});
+
 const AnalyzeTextInput = z.object({
   raw_text: z.string().min(1).max(20000),
   user_corrected: z.boolean().optional(),
+  listing: z.boolean().optional(),
 });
 
 export const analyzeImage = createServerFn({ method: "POST" })
@@ -32,6 +37,13 @@ export const analyzeImage = createServerFn({ method: "POST" })
     return { extracted: { ...extracted, engine: `${ocr.provider} + rule-based extractor` }, ...result };
   });
 
+export const analyzeUrl = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => AnalyzeUrlInput.parse(d))
+  .handler(async ({ data }) => {
+    const { analyzeProductUrlPipeline } = await import("@/lib/ecommerce/analyzeUrl.server");
+    return analyzeProductUrlPipeline(data.url);
+  });
+
 export const analyzeText = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => AnalyzeTextInput.parse(d))
   .handler(async ({ data }) => {
@@ -39,8 +51,11 @@ export const analyzeText = createServerFn({ method: "POST" })
       data.raw_text,
       data.user_corrected ? "user_corrected" : "ocr",
     );
-    const result = runRuleEngine(extracted);
-    return { extracted, ...result };
+    const withContext = data.listing
+      ? { ...extracted, analysis_source: "ecommerce_url" as const, analysis_context: "ecommerce_listing" as const }
+      : extracted;
+    const result = runRuleEngine(withContext);
+    return { extracted: withContext, ...result };
   });
 
 export const getRules = createServerFn({ method: "GET" }).handler(async () => LEGAL_RULES);
