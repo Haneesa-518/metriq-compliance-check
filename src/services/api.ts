@@ -1,7 +1,7 @@
 /**
  * Frontend service layer. UI components never call server functions directly.
  */
-import { analyzeImage, analyzeText } from "@/lib/analysis.functions";
+import { analyzeImage, analyzeText, analyzeUrl } from "@/lib/analysis.functions";
 import { runRuleEngine } from "@/lib/compliance/engine";
 import { extractFieldsFromText } from "@/lib/compliance/extract";
 import { DEMO_CASES, type DemoCase } from "@/lib/demo/demo-cases";
@@ -20,6 +20,22 @@ export function friendlyError(err: unknown): string {
   if (msg.includes("AI_CREDITS")) return "AI usage limit reached. Use Demo Mode to continue the demonstration.";
   if (msg.includes("OCR_EMPTY"))
     return "No readable text could be extracted from that image. Try a sharper, well-lit photo.";
+  if (msg.includes("URL_EMPTY")) return "Please enter a product URL.";
+  if (msg.includes("URL_INVALID")) return "Please enter a valid product URL.";
+  if (msg.includes("URL_UNSUPPORTED"))
+    return "That URL is not supported. Enter a public https:// product listing URL.";
+  if (msg.includes("URL_BLOCKED"))
+    return "This product page blocks automated access. Try uploading a screenshot of the listing or the package instead.";
+  if (msg.includes("URL_NOT_FOUND")) return "That product page could not be found. Check the URL and try again.";
+  if (msg.includes("URL_RATE_LIMITED"))
+    return "The product site is rate-limiting requests right now. Please try again shortly.";
+  if (msg.includes("URL_TIMEOUT"))
+    return "The product page took too long to respond. Try again, or upload a screenshot instead.";
+  if (msg.includes("URL_NOT_HTML")) return "That link is not a product page. Paste the product listing URL.";
+  if (msg.includes("URL_FETCH_FAILED"))
+    return "We couldn't access this product page. Try uploading a screenshot instead.";
+  if (msg.includes("PAGE_INSUFFICIENT"))
+    return "Insufficient product information was found on this page. Try a different listing URL or upload a package image.";
   if (msg.includes("AI_ERROR")) return "The extraction service returned an error. Please try again.";
   if (/Only JPG|too large|too big/i.test(msg)) return msg;
   if (/fetch|network|Failed to fetch/i.test(msg))
@@ -34,7 +50,25 @@ export async function analyzeProduct(imageDataUrl: string): Promise<AnalysisReco
     created_at: new Date().toISOString(),
     image_data_url: imageDataUrl,
     is_demo: false,
+    analysis_source: "image_upload",
     ...result,
+  };
+  saveAnalysis(record);
+  return record;
+}
+
+export async function analyzeProductUrl(url: string): Promise<AnalysisRecord> {
+  const result = await analyzeUrl({ data: { url } });
+  const { page, ...analysis } = result;
+  const record: AnalysisRecord = {
+    id: newId(),
+    created_at: new Date().toISOString(),
+    image_data_url: page.image_data_url,
+    is_demo: false,
+    analysis_source: "ecommerce_url",
+    source_url: page.url,
+    page_title: page.title,
+    ...analysis,
   };
   saveAnalysis(record);
   return record;
@@ -44,7 +78,13 @@ export async function reanalyzeText(
   previous: AnalysisRecord,
   rawText: string,
 ): Promise<AnalysisRecord> {
-  const result = await analyzeText({ data: { raw_text: rawText, user_corrected: true } });
+  const result = await analyzeText({
+    data: {
+      raw_text: rawText,
+      user_corrected: true,
+      listing: previous.analysis_source === "ecommerce_url",
+    },
+  });
   const record: AnalysisRecord = { ...previous, ...result, created_at: new Date().toISOString() };
   saveAnalysis(record);
   return record;
@@ -52,15 +92,32 @@ export async function reanalyzeText(
 
 /** Demo mode runs entirely locally — no external service or API key required. */
 export function runDemo(demo: DemoCase): AnalysisRecord {
-  const extracted = extractFieldsFromText(demo.raw_text);
-  const engineResult = runRuleEngine({ ...extracted, engine: "demo mode (synthetic sample text)" });
+  const isUrl = demo.kind === "url";
+  const base = extractFieldsFromText(demo.raw_text, isUrl ? "page_text" : "ocr");
+  const extracted = {
+    ...base,
+    engine: isUrl
+      ? "demo mode (synthetic e-commerce listing)"
+      : "demo mode (synthetic sample text)",
+    analysis_source: (isUrl ? "ecommerce_url" : "demo") as "ecommerce_url" | "demo",
+    analysis_context: (isUrl ? "ecommerce_listing" : "physical_package") as
+      | "ecommerce_listing"
+      | "physical_package",
+    information_sources: isUrl
+      ? ["Product title", "Product description", "Product specifications", "Product page text"]
+      : ["Synthetic sample package text"],
+  };
+  const engineResult = runRuleEngine(extracted);
   const record: AnalysisRecord = {
     id: newId(),
     created_at: new Date().toISOString(),
     image_data_url: null,
     is_demo: true,
     demo_label: demo.label,
-    extracted: { ...extracted, engine: "demo mode (synthetic sample text)" },
+    analysis_source: isUrl ? "ecommerce_url" : "demo",
+    source_url: demo.url ?? null,
+    page_title: demo.title ?? null,
+    extracted,
     ...engineResult,
   };
   saveAnalysis(record);

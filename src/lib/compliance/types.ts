@@ -1,6 +1,39 @@
 export type CheckStatus = "PASS" | "FAIL" | "REVIEW" | "NOT_APPLICABLE";
 
-export type FieldSource = "ocr" | "user_corrected" | "unavailable" | "demo_sample";
+export type FieldSource =
+  | "ocr"
+  | "user_corrected"
+  | "unavailable"
+  | "demo_sample"
+  /* e-commerce listing sources */
+  | "page_title"
+  | "description"
+  | "specification"
+  | "page_text"
+  | "product_image"
+  | "ai";
+
+/** Where the analysed material came from. */
+export type AnalysisSource = "image_upload" | "ecommerce_url" | "demo";
+
+/**
+ * Analysis context. A physical package must carry every declaration; an
+ * e-commerce listing displays only a subset, so applicability differs.
+ */
+export type AnalysisContext = "physical_package" | "ecommerce_listing";
+
+export const FIELD_SOURCE_LABELS: Record<FieldSource, string> = {
+  ocr: "Product image (OCR)",
+  user_corrected: "User corrected",
+  unavailable: "Not detected",
+  demo_sample: "Synthetic sample",
+  page_title: "Product title",
+  description: "Product description",
+  specification: "Product specifications",
+  page_text: "Product page text",
+  product_image: "Product image (OCR)",
+  ai: "AI-assisted extraction",
+};
 
 /**
  * Extraction confidence is an INTERNAL heuristic signal derived from how well a
@@ -30,6 +63,12 @@ export interface ExtractedData {
   /** overall extraction-quality signal 0..1 (heuristic) */
   ocr_confidence: number;
   engine: string;
+  /** which input pipeline produced this data */
+  analysis_source?: AnalysisSource;
+  /** listing vs physical package — drives rule applicability */
+  analysis_context?: AnalysisContext;
+  /** human-readable list of the information sources actually used */
+  information_sources?: string[];
   /** deterministic context flags derived from the text */
   context?: PackageContext;
 }
@@ -100,6 +139,10 @@ export interface AnalysisRecord {
   created_at: string;
   image_data_url: string | null;
   is_demo: boolean;
+  /** defaults to "image_upload" for legacy records */
+  analysis_source?: AnalysisSource;
+  source_url?: string | null;
+  page_title?: string | null;
   demo_label?: string;
   extracted: ExtractedData;
   checks: CheckResult[];

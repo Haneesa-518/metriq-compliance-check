@@ -10,6 +10,10 @@ export interface DemoCase {
   description: string;
   expectation: string;
   raw_text: string;
+  /** "url" demo cases simulate an e-commerce listing rather than a package */
+  kind?: "package" | "url";
+  url?: string;
+  title?: string;
 }
 
 export const DEMO_CASES: DemoCase[] = [
@@ -114,5 +118,35 @@ Consumer care: care@samplehousehold.example / 1800 555 6666
 Mfg Date: 04/2026
 Batch No: SH-3312
 Synthetic sample data for demonstration`,
+  },
+  {
+    id: "demo-7",
+    label: "Scenario G — E-commerce listing (synthetic)",
+    description:
+      "A fictional product listing page: title, description and specifications, with no package image available.",
+    expectation:
+      "Expected: listing declarations evaluated; physical-package-only declarations flagged for human verification, not failed.",
+    kind: "url",
+    url: "https://demo.example/shop/sample-brand-atta-1kg",
+    title: "Sample Brand Whole Wheat Atta — 1 kg Pack",
+    raw_text: `Sample Brand Whole Wheat Atta - 1 kg Pack
+
+Product title: Sample Brand Whole Wheat Atta - 1 kg Pack
+
+Description: Stone-ground whole wheat atta from Sample Foods. Vegetarian. Sold in a 1 kg sealed pack.
+
+Specifications:
+Brand: Sample Brand
+Net quantity: 1 kg
+Price: Rs. 245
+Manufacturer: Sample Foods Private Limited, Plot 14, Industrial Area Phase II, Sampletown, Maharashtra 411001
+Country of Origin: India
+Consumer care: care@samplefoods.example / 1800 123 4567
+Ingredients: Whole wheat, wheat bran, wheat germ
+
+Listing page text:
+MRP: Rs. 245.00 (inclusive of all taxes)
+Seller: Sample Retail LLP
+Synthetic sample listing data for demonstration`,
   },
 ];

@@ -93,3 +93,61 @@ export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
     provider: "lovable-ai-vision",
   };
 }
+
+/**
+ * Text-based product-information extraction for e-commerce listings.
+ * Same rule as the vision layer: it only reports what it can see and never
+ * decides legal compliance. The deterministic rule engine does that.
+ */
+const PAGE_SYSTEM_PROMPT = `You are an information-extraction assistant for Indian e-commerce product listings.
+Your ONLY job is to identify declarations that are literally present in the supplied listing content.
+You must NEVER judge legal compliance and never invent, calculate or infer values that are not printed.
+Return strict JSON with this shape:
+{
+  "fields": {
+    "<field_key>": {"value": string|null, "confidence": number, "evidence": string|null, "source": "page_title"|"description"|"specification"|"page_text"}
+  }
+}
+field_key is one of: product_name, manufacturer, packer, importer, address, net_quantity, mrp, unit_sale_price, consumer_care, country_of_origin, date_of_manufacture, veg_nonveg_mark, ingredients_list, fssai_licence, best_before.
+"evidence" MUST be the exact fragment of the supplied content that the value came from, copied verbatim. Use null when a value is not present.
+confidence is 0..1. Output JSON only, no markdown fences.`;
+
+export interface PageFieldExtraction {
+  fields: Record<string, { value: string | null; confidence: number; evidence?: string | null; source?: string }>;
+  provider: string;
+}
+
+export async function runPageFieldExtraction(pageText: string): Promise<PageFieldExtraction> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("AI_KEY_MISSING");
+
+  const res = await fetch(GATEWAY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
+    body: JSON.stringify({
+      model: "openai/gpt-5.6-sol",
+      reasoning_effort: "none",
+      messages: [
+        { role: "system", content: PAGE_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Extract the declarations from this product listing content.\n\n${pageText.slice(0, 12000)}`,
+        },
+      ],
+    }),
+  });
+
+  if (res.status === 429) throw new Error("AI_RATE_LIMIT");
+  if (res.status === 402) throw new Error("AI_CREDITS");
+  if (!res.ok) throw new Error(`AI_ERROR_${res.status}`);
+
+  const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const content = json.choices?.[0]?.message?.content ?? "";
+  const cleaned = content.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  try {
+    const parsed = JSON.parse(cleaned) as Partial<PageFieldExtraction>;
+    return { fields: parsed.fields ?? {}, provider: "lovable-ai-text" };
+  } catch {
+    return { fields: {}, provider: "lovable-ai-text (unparsed)" };
+  }
+}

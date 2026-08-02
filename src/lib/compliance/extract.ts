@@ -297,10 +297,18 @@ export function textQuality(text: string, detectedFields: number): number {
   return Math.min(0.95, 0.55 + (detectedFields / FIELD_KEYS.length) * 0.4);
 }
 
-/** Merge AI-extracted fields over the deterministic baseline. */
+/**
+ * Merge AI/secondary extracted fields over the deterministic baseline.
+ * A candidate only wins when it is new or more confident, and the source and
+ * evidence of the winning value are preserved.
+ */
 export function mergeExtraction(
   base: ExtractedData,
-  aiFields: Record<string, { value?: string | null; confidence?: number }> | undefined,
+  aiFields:
+    | Record<string, { value?: string | null; confidence?: number; evidence?: string | null; source?: FieldSource }>
+    | undefined,
+  defaultSource: FieldSource = "ocr",
+  engineLabel = "AI vision OCR + rule-based extractor",
 ): ExtractedData {
   if (!aiFields) return base;
   const fields = { ...base.fields };
@@ -316,8 +324,8 @@ export function mergeExtraction(
           value: aiValue,
           confidence: aiConf,
           band: bandFor(aiConf),
-          evidence: current.evidence ?? findEvidence(base.raw_text, aiValue),
-          source: "ocr",
+          evidence: ai?.evidence?.trim() || current.evidence || findEvidence(base.raw_text, aiValue),
+          source: ai?.source ?? defaultSource,
         };
       }
     }
@@ -327,7 +335,7 @@ export function mergeExtraction(
     ...base,
     fields,
     ocr_confidence: textQuality(base.raw_text, detected),
-    engine: "AI vision OCR + rule-based extractor",
+    engine: engineLabel,
     context: detectContext(base.raw_text, fields),
   };
 }
