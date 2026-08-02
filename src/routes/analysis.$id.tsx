@@ -118,6 +118,14 @@ function AnalysisPage() {
           </span>
           <span>{new Date(record.created_at).toLocaleString()}</span>
           <span>Extraction engine: {record.extracted.engine}</span>
+          <span>
+            Analysis source:{" "}
+            <span className="font-medium text-foreground">
+              {record.analysis_source === "ecommerce_url"
+                ? "E-commerce product URL"
+                : "Uploaded product image"}
+            </span>
+          </span>
           {record.is_demo && (
             <span className="rounded border border-primary/40 bg-primary/10 px-2 py-0.5 font-semibold text-primary">
               DEMO · SYNTHETIC SAMPLE DATA
@@ -141,11 +149,44 @@ function AnalysisPage() {
 
             <section id="product" className="scroll-mt-20">
               <h2 className="mb-3 text-sm font-semibold">Extracted product information</h2>
+              {record.analysis_source === "ecommerce_url" && (
+                <div className="panel mb-3 space-y-1.5 p-4 text-xs">
+                  {record.page_title && (
+                    <p className="text-sm font-medium text-foreground">{record.page_title}</p>
+                  )}
+                  {record.source_url && (
+                    <p className="break-all text-muted-foreground">
+                      Product URL:{" "}
+                      <a
+                        href={record.source_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-primary underline underline-offset-2"
+                      >
+                        {record.source_url}
+                      </a>
+                    </p>
+                  )}
+                  <p className="text-muted-foreground">
+                    Information sources:{" "}
+                    {(record.extracted.information_sources ?? ["Product page text"]).join(" · ")}
+                  </p>
+                  <p className="text-muted-foreground">
+                    An e-commerce listing is not required to display every physical-package
+                    declaration. Declarations that appear only on the pack are flagged for human
+                    verification instead of being failed.
+                  </p>
+                </div>
+              )}
               <ProductInfoCards extracted={record.extracted} />
             </section>
 
             <section id="ocr" className="scroll-mt-20">
-              <h2 className="mb-3 text-sm font-semibold">OCR extracted text</h2>
+              <h2 className="mb-3 text-sm font-semibold">
+                {record.analysis_source === "ecommerce_url"
+                  ? "Extracted listing text"
+                  : "OCR extracted text"}
+              </h2>
               <OCRTextPanel
                 key={record.extracted.raw_text.length}
                 text={record.extracted.raw_text}
@@ -179,7 +220,9 @@ function AnalysisPage() {
                 <ImagePreview src={record.image_data_url} name="Analyzed label" />
               ) : (
                 <div className="panel p-5 text-sm text-muted-foreground">
-                  No image — this analysis was produced in demo mode from synthetic sample text.
+                  {record.analysis_source === "ecommerce_url"
+                    ? "No package image could be retrieved from the product page — this analysis used the listing text only."
+                    : "No image — this analysis was produced in demo mode from synthetic sample text."}
                 </div>
               )}
               <div className="panel p-5">
@@ -200,7 +243,7 @@ function AnalysisPage() {
                     </span>
                   </li>
                   <li className="flex justify-between">
-                    <span className="text-muted-foreground">OCR confidence</span>
+                    <span className="text-muted-foreground">Extraction confidence</span>
                     <span className="font-mono">
                       {Math.round(record.extracted.ocr_confidence * 100)}%
                     </span>

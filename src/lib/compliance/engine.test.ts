@@ -237,3 +237,36 @@ describe("legal knowledge layer", () => {
     }
   });
 });
+
+describe("e-commerce listing context", () => {
+  const listingText = `Product title: Sample Brand Atta 1 kg
+Net quantity: 1 kg
+MRP: Rs. 245.00
+Manufacturer: Sample Foods Private Limited, Plot 14, Sampletown, Maharashtra 411001
+Consumer care: care@samplefoods.example / 1800 123 4567
+Ingredients: Whole wheat, wheat bran`;
+
+  function listingResult() {
+    const base = extractFieldsFromText(listingText, "page_text");
+    return runRuleEngine({ ...base, analysis_context: "ecommerce_listing" });
+  }
+
+  it("does not FAIL a physical-package-only declaration missing from a listing", () => {
+    const { checks } = listingResult();
+    const date = checks.find((c) => c.field === "date_of_manufacture");
+    expect(date?.status).toBe("REVIEW");
+    expect(date?.requires_human_review).toBe(true);
+  });
+
+  it("still evaluates listing-mandated declarations normally", () => {
+    const { checks } = listingResult();
+    expect(checks.find((c) => c.field === "net_quantity")?.status).toBe("PASS");
+    expect(checks.find((c) => c.field === "mrp")?.status).toBe("PASS");
+  });
+
+  it("keeps package-only rules failing for physical package analysis", () => {
+    const base = extractFieldsFromText(listingText, "ocr");
+    const { checks } = runRuleEngine(base);
+    expect(checks.find((c) => c.field === "date_of_manufacture")?.status).toBe("FAIL");
+  });
+});
