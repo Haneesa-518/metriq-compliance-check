@@ -23,7 +23,27 @@ interface Layer {
 interface Ctx {
   data: ExtractedData;
   pkg: PackageContext;
+  /** true when the analysed material is an e-commerce listing, not a package */
+  listing: boolean;
 }
+
+/**
+ * Declarations that live on the physical package. Rule 6(10) of the Legal
+ * Metrology (Packaged Commodities) Rules, 2011 requires an e-commerce listing
+ * to display commodity name, net quantity, retail sale price, the
+ * manufacturer/packer/importer identity, consumer care details and, for
+ * imported goods, the country of origin. The remaining declarations are not
+ * required to appear in the online listing, so their absence there is reported
+ * as "not verifiable from the listing" rather than as a failure.
+ */
+const PACKAGE_ONLY_FIELDS = new Set([
+  "date_of_manufacture",
+  "unit_sale_price",
+  "best_before",
+  "veg_nonveg_mark",
+  "ingredients_list",
+  "fssai_licence",
+]);
 
 function ruleFor(field: string): LegalRule {
   const rule = ruleForField(field);
@@ -99,6 +119,22 @@ function evaluate(
 
   if (!value) {
     const presence: Layer[] = [{ label: "Declaration present in extracted text", passed: false, severity: "hard" }];
+    if (ctx.listing && PACKAGE_ONLY_FIELDS.has(fieldKey)) {
+      return build(
+        rule,
+        "REVIEW",
+        "This declaration was not found in the e-commerce listing. It is a physical-package declaration that an online listing is not required to display, so its absence here cannot be treated as non-compliance.",
+        null,
+        null,
+        ctx.data.ocr_confidence,
+        "Verify this declaration on the physical package or on a package image, for example by uploading a package photograph.",
+        [
+          { label: "Declaration present in listing information", passed: false, severity: "soft" },
+          { label: "Required to be displayed in an e-commerce listing", passed: null, severity: "soft" },
+        ],
+        "Physical-package declaration — not verifiable from an e-commerce listing alone.",
+      );
+    }
     if (textPoor) {
       return build(
         rule,
@@ -536,7 +572,7 @@ export function runRuleEngine(data: ExtractedData) {
     food_signal: null,
     food_certainty: "certain",
   };
-  const ctx: Ctx = { data, pkg };
+  const ctx: Ctx = { data, pkg, listing: data.analysis_context === "ecommerce_listing" };
   const checks = CHECKS.map((fn) => fn(ctx));
   return {
     checks,
