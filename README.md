@@ -11,7 +11,7 @@ printed on it, and checks them against a **structured Legal Metrology rule datas
 
 ## Problem
 
-Pre-packaged commodities sold in India must carry mandatory declarations (commodity name, net
+Pre-packaged commodities sold in India (including e-commerce platforms) must carry mandatory declarations (commodity name, net
 quantity, retail sale price, manufacturer/packer details, consumer care details, and more, per the
 Legal Metrology (Packaged Commodities) Rules, 2011). Manually auditing labels at scale is slow and
 inconsistent.
