@@ -1,6 +1,7 @@
 import { Fragment, useState } from "react";
 import { AlertTriangle, Check, Minus, X } from "lucide-react";
 import type { AnalysisRecord, CheckResult, ExtractedData } from "@/lib/compliance/types";
+import { FIELD_SOURCE_LABELS } from "@/lib/compliance/types";
 import { ComplianceBadge, ConfidenceIndicator } from "@/components/ComplianceBadge";
 import { getRule } from "@/lib/legal/rules.data";
 import { Button } from "@/components/ui/button";
@@ -142,7 +143,7 @@ export function ProductInfoCards({ extracted }: { extracted: ExtractedData }) {
           <div className="mt-3 flex items-center justify-between gap-2">
             <ConfidenceIndicator value={f.confidence} band={f.band} />
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              {f.source === "user_corrected" ? "user corrected" : f.source === "ocr" ? "ocr" : "unavailable"}
+              {FIELD_SOURCE_LABELS[f.source] ?? f.source}
             </span>
           </div>
         </div>
