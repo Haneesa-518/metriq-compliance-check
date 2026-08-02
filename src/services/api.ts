@@ -92,15 +92,32 @@ export async function reanalyzeText(
 
 /** Demo mode runs entirely locally — no external service or API key required. */
 export function runDemo(demo: DemoCase): AnalysisRecord {
-  const extracted = extractFieldsFromText(demo.raw_text);
-  const engineResult = runRuleEngine({ ...extracted, engine: "demo mode (synthetic sample text)" });
+  const isUrl = demo.kind === "url";
+  const base = extractFieldsFromText(demo.raw_text);
+  const extracted = {
+    ...base,
+    engine: isUrl
+      ? "demo mode (synthetic e-commerce listing)"
+      : "demo mode (synthetic sample text)",
+    analysis_source: (isUrl ? "ecommerce_url" : "demo") as "ecommerce_url" | "demo",
+    analysis_context: (isUrl ? "ecommerce_listing" : "physical_package") as
+      | "ecommerce_listing"
+      | "physical_package",
+    information_sources: isUrl
+      ? ["Product title", "Product description", "Product specifications", "Product page text"]
+      : ["Synthetic sample package text"],
+  };
+  const engineResult = runRuleEngine(extracted);
   const record: AnalysisRecord = {
     id: newId(),
     created_at: new Date().toISOString(),
     image_data_url: null,
     is_demo: true,
     demo_label: demo.label,
-    extracted: { ...extracted, engine: "demo mode (synthetic sample text)" },
+    analysis_source: isUrl ? "ecommerce_url" : "demo",
+    source_url: demo.url ?? null,
+    page_title: demo.title ?? null,
+    extracted,
     ...engineResult,
   };
   saveAnalysis(record);
