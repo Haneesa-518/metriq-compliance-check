@@ -129,7 +129,9 @@ Synthetic sample data for demonstration`,
     kind: "url",
     url: "https://demo.example/shop/sample-brand-atta-1kg",
     title: "Sample Brand Whole Wheat Atta — 1 kg Pack",
-    raw_text: `Product title: Sample Brand Whole Wheat Atta - 1 kg Pack
+    raw_text: `Sample Brand Whole Wheat Atta - 1 kg Pack
+
+Product title: Sample Brand Whole Wheat Atta - 1 kg Pack
 
 Description: Stone-ground whole wheat atta from Sample Foods. Vegetarian. Sold in a 1 kg sealed pack.
 

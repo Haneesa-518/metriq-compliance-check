@@ -93,7 +93,7 @@ export async function reanalyzeText(
 /** Demo mode runs entirely locally — no external service or API key required. */
 export function runDemo(demo: DemoCase): AnalysisRecord {
   const isUrl = demo.kind === "url";
-  const base = extractFieldsFromText(demo.raw_text);
+  const base = extractFieldsFromText(demo.raw_text, isUrl ? "page_text" : "ocr");
   const extracted = {
     ...base,
     engine: isUrl
