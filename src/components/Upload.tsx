@@ -129,10 +129,18 @@ export const PROGRESS_STEPS = [
   "Preparing report",
 ];
 
-export function AnalysisProgress({ step }: { step: number }) {
+export const URL_PROGRESS_STEPS = [
+  "Fetching product page",
+  "Extracting product information",
+  "Analyzing available product images",
+  "Running compliance checks",
+  "Preparing report",
+];
+
+export function AnalysisProgress({ step, steps = PROGRESS_STEPS }: { step: number; steps?: string[] }) {
   return (
     <ol className="panel space-y-3 p-5">
-      {PROGRESS_STEPS.map((label, i) => {
+      {steps.map((label, i) => {
         const done = i < step;
         const active = i === step;
         return (
