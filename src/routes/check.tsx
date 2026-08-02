@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { analyzeProduct, analyzeProductUrl, friendlyError, getDemoCases, runDemo } from "@/services/api";
 
 export const Route = createFileRoute("/check")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: { demo?: unknown }) => ({
     demo: search.demo === true || search.demo === "true" ? true : undefined,
   }),
   head: () => ({
