@@ -71,6 +71,8 @@ export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["su
         over {summary.applicable} applicable checks. Not-applicable checks are excluded entirely.{" "}
         {SCORE_DISCLAIMER}
       </p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{SCREENING_DISCLAIMER}</p>
+
     </div>
   );
 }
