@@ -1,33 +1,62 @@
 import { cn } from "@/lib/utils";
-import { bandFor, type CheckStatus, type ConfidenceBand } from "@/lib/compliance/types";
+import { bandFor, STATUS_MEANINGS, type CheckStatus, type ConfidenceBand } from "@/lib/compliance/types";
 
-const MAP: Record<CheckStatus, { text: string; cls: string }> = {
-  PASS: { text: "PASS", cls: "bg-pass/15 text-pass border-pass/40" },
-  FAIL: { text: "FAIL", cls: "bg-fail/15 text-fail border-fail/40" },
-  REVIEW: { text: "REVIEW", cls: "bg-review/15 text-review border-review/40" },
-  NOT_APPLICABLE: { text: "N/A", cls: "bg-muted text-muted-foreground border-border" },
+const MAP: Record<CheckStatus, { text: string; icon: string; cls: string }> = {
+  PASS: { text: "PASS", icon: "✓", cls: "bg-pass/15 text-pass border-pass/40" },
+  FAIL: { text: "FAIL", icon: "✕", cls: "bg-fail/15 text-fail border-fail/40" },
+  REVIEW: { text: "REVIEW", icon: "⚠", cls: "bg-review/15 text-review border-review/40" },
+  NOT_APPLICABLE: {
+    text: "NOT APPLICABLE",
+    icon: "—",
+    cls: "bg-muted text-muted-foreground border-border",
+  },
 };
 
 export function ComplianceBadge({
   status,
+  meaning,
   className,
 }: {
   status: CheckStatus;
+  /** optional override for the plain-language meaning shown under the badge */
+  meaning?: string;
   className?: string;
 }) {
   const s = MAP[status];
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-semibold tracking-wider",
+        "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-semibold tracking-wider",
         s.cls,
         className,
       )}
     >
+      <span aria-hidden>{s.icon}</span>
       {s.text}
     </span>
   );
 }
+
+/** Badge plus its plain-language meaning, used wherever space allows. */
+export function ComplianceStatus({
+  status,
+  meaning,
+  className,
+}: {
+  status: CheckStatus;
+  meaning?: string;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex flex-col items-start gap-1", className)}>
+      <ComplianceBadge status={status} />
+      <span className="text-[11px] leading-tight text-muted-foreground">
+        {meaning || STATUS_MEANINGS[status]}
+      </span>
+    </span>
+  );
+}
+
 
 /**
  * Extraction confidence is an internal heuristic signal (how well the value
