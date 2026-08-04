@@ -416,11 +416,11 @@ export function check_consumer_care(ctx: Ctx) {
     const email = /[\w.+-]+@[\w-]+\.[\w.]+/.test(v);
     const phone = /\d{6,}/.test(v.replace(/[\s-]/g, ""));
     return [
-      { label: "Contact pattern detected (e-mail or telephone)", passed: email || phone, severity: "hard" },
-      { label: "E-mail address detected", passed: email, severity: "soft" },
-      { label: "Telephone / helpline number detected", passed: phone, severity: "soft" },
+      { label: "Contact information (e-mail or telephone)", passed: email || phone, severity: "hard" },
+      { label: "E-mail address", passed: email, severity: "soft" },
+      { label: "Phone number", passed: phone, severity: "soft" },
       {
-        label: "Consumer-care wording identified",
+        label: "Consumer-care wording",
         passed: /consumer\s*care|customer\s*care|complaint|helpline/i.test(raw),
         severity: "soft",
       },
