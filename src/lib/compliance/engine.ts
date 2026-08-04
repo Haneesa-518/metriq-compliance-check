@@ -338,15 +338,25 @@ export function check_manufacturer_details(ctx: Ctx): CheckResult {
 
   if (!chosen?.value) return evaluate(ctx, "manufacturer");
 
+  const importerNeeded = ctx.pkg.is_imported;
   const layers: Layer[] = [
-    { label: "Manufacturer / packer / importer identity present", passed: true, severity: "hard" },
+    { label: "Manufacturer / packer / importer name", passed: true, severity: "hard" },
     { label: "Identity value is readable", passed: !degradedText(chosen.value), severity: "soft" },
     {
       label: "Identity looks like an entity name",
       passed: /[a-z]{3}/i.test(chosen.value),
       severity: "soft",
     },
-    { label: "Address information present", passed: Boolean(address?.value), severity: "soft" },
+    { label: "Address", passed: Boolean(address?.value), severity: "soft" },
+    ...(importerNeeded
+      ? [
+          {
+            label: "Importer information",
+            passed: Boolean(importer?.value),
+            severity: "soft" as const,
+          },
+        ]
+      : []),
   ];
 
   const softIssue = layers.find((l) => l.passed !== true);
@@ -355,12 +365,14 @@ export function check_manufacturer_details(ctx: Ctx): CheckResult {
     return build(
       rule,
       "REVIEW",
-      `A responsible-entity declaration was found, but one validation could not be confirmed: ${softIssue.label}.`,
+      `A responsible-entity declaration was found, but one element could not be confirmed: ${softIssue.label}.`,
       chosen.value,
       chosen.evidence,
       conf,
-      "Verify the manufacturer / packer name together with the complete address on the package.",
+      "Verify the manufacturer / packer / importer name together with the complete address on the physical package.",
       layers,
+      rule.applicability,
+      { status_summary: "Partial information detected" },
     );
   }
   if (bandFor(conf) === "LOW") {
@@ -373,6 +385,8 @@ export function check_manufacturer_details(ctx: Ctx): CheckResult {
       conf,
       "Verify the manufacturer / packer declaration manually.",
       layers,
+      rule.applicability,
+      { status_summary: "Verification required — weak extraction evidence" },
     );
   }
   return build(
