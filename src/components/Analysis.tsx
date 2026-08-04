@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { AlertTriangle, Check, Minus, X } from "lucide-react";
 import type { AnalysisRecord, CheckResult, ExtractedData } from "@/lib/compliance/types";
-import { FIELD_SOURCE_LABELS } from "@/lib/compliance/types";
+import { FIELD_SOURCE_LABELS, STATUS_LABELS } from "@/lib/compliance/types";
 import { ComplianceBadge, ComplianceStatus, ConfidenceIndicator } from "@/components/ComplianceBadge";
 import { getRule } from "@/lib/legal/rules.data";
 import { Button } from "@/components/ui/button";
