@@ -9,21 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
-  COMPLIANT: "NO ISSUES FOUND (screening)",
-  NON_COMPLIANT: "ISSUES FOUND (screening)",
-  NEEDS_REVIEW: "REQUIRES REVIEW",
+  COMPLIANT: "NO SCREENING ISSUES DETECTED",
+  NON_COMPLIANT: "VERIFICATION REQUIRED",
+  NEEDS_REVIEW: "VERIFICATION REQUIRED",
 };
 
 export const SCORE_DISCLAIMER =
-  "This score represents automated screening coverage and does not constitute a legal determination of compliance.";
+  "Automated screening coverage — not a legal compliance determination.";
+
+export const SCREENING_DISCLAIMER =
+  "AI-assisted screening prototype. Results indicate information detected or not detected in the submitted source and do not constitute a legal determination. Final verification must be performed by a qualified human authority.";
 
 export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["summary"] }) {
-  const tone =
-    summary.overall === "COMPLIANT"
-      ? "text-pass"
-      : summary.overall === "NON_COMPLIANT"
-        ? "text-fail"
-        : "text-review";
+  const tone = summary.overall === "COMPLIANT" ? "text-pass" : "text-review";
   const stats = [
     { label: "Pass", value: summary.passed, tone: "text-pass" },
     { label: "Review", value: summary.review, tone: "text-review" },
@@ -38,10 +36,14 @@ export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["su
           <p className={cn("mt-1 text-2xl font-semibold", tone)}>{OVERALL_LABEL[summary.overall]}</p>
         </div>
         <div className="text-right">
-          <p className="label-caps">Compliance screening score</p>
+          <p className="label-caps">Screening coverage score</p>
           <p className="mt-1 font-mono text-2xl font-semibold text-primary">{summary.score}%</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Screening coverage
+          </p>
         </div>
       </div>
+
 
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((s) => (
