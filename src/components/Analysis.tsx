@@ -103,7 +103,10 @@ export function CriticalIssuesCard({ summary }: { summary: AnalysisRecord["summa
     <div className="panel p-5">
       {summary.critical_issues.length > 0 && (
         <>
-          <p className="label-caps text-fail">Critical issues ({summary.critical_issues.length})</p>
+          <p className="label-caps text-fail">
+            Required information not detected ({summary.critical_issues.length})
+          </p>
+
           <ol className="mt-3 space-y-2">
             {summary.critical_issues.map((issue, i) => (
               <li key={i} className="flex gap-2 text-sm leading-relaxed">
