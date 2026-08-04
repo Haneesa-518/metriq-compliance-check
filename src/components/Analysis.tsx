@@ -327,7 +327,7 @@ export function ExplanationPanel({ check }: { check: CheckResult }) {
           </div>
         ))}
       </dl>
-      {(detected.length > 0 || missing.length > 0) && (
+      {missing.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <p className="label-caps">Detected</p>
