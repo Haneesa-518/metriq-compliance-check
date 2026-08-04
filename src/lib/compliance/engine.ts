@@ -55,6 +55,31 @@ function steps(layers: Layer[]): ValidationStep[] {
   return layers.map(({ label, passed }) => ({ label, passed }));
 }
 
+interface Extra {
+  detected_components?: string[];
+  missing_components?: string[];
+  source_note?: string | null;
+  /** overrides the default plain-language meaning of the status */
+  status_summary?: string;
+}
+
+const DEFAULT_SUMMARY: Record<CheckStatus, string> = {
+  PASS: "Complete information detected",
+  REVIEW: "Partial / ambiguous information detected",
+  FAIL: "Required information not detected in submitted source",
+  NOT_APPLICABLE: "Rule does not apply to this product",
+};
+
+/**
+ * Screening results describe the submitted source only. Absence of a
+ * declaration in a listing or an image never proves absence on the package.
+ */
+function sourceNote(ctx: Ctx): string {
+  return ctx.listing
+    ? "Not detected in the submitted e-commerce source. Verify against the physical package before making a final legal determination."
+    : "Not detected in the submitted source. Verify against the physical package or authoritative product documentation before making a final determination.";
+}
+
 function build(
   rule: LegalRule,
   status: CheckStatus,
@@ -65,6 +90,7 @@ function build(
   action: string,
   layers: Layer[],
   applicability = rule.applicability,
+  extra: Extra = {},
 ): CheckResult {
   const conf = Math.round(Math.max(0, Math.min(1, confidence)) * 100) / 100;
   return {
@@ -83,6 +109,12 @@ function build(
     applicability,
     recommended_action: action,
     requires_human_review: status === "REVIEW",
+    status_summary: extra.status_summary ?? DEFAULT_SUMMARY[status],
+    detected_components:
+      extra.detected_components ?? layers.filter((l) => l.passed === true).map((l) => l.label),
+    missing_components:
+      extra.missing_components ?? layers.filter((l) => l.passed !== true).map((l) => l.label),
+    source_note: extra.source_note ?? null,
   };
 }
 
@@ -97,13 +129,15 @@ function notApplicable(rule: LegalRule, reason: string, action: string): CheckRe
     action,
     [{ label: "Rule applicability", passed: false, severity: "soft" }],
     reason,
+    { detected_components: [], missing_components: [] },
   );
 }
 
 /**
  * Layered validation: presence → readability → format/structure → confidence.
- * A missing value is only a FAIL when the extracted text was good enough to
- * trust its absence; otherwise the result is REVIEW for human verification.
+ * FAIL is reserved for "nothing related to this declaration was detected in the
+ * submitted source". Whenever meaningful related information was detected but
+ * is incomplete or ambiguous, the result is REVIEW.
  */
 function evaluate(
   ctx: Ctx,
@@ -133,6 +167,10 @@ function evaluate(
           { label: "Required to be displayed in an e-commerce listing", passed: null, severity: "soft" },
         ],
         "Physical-package declaration — not verifiable from an e-commerce listing alone.",
+        {
+          status_summary: "Verification required — not displayed in this listing",
+          source_note: sourceNote(ctx),
+        },
       );
     }
     if (textPoor) {
@@ -148,17 +186,21 @@ function evaluate(
           { label: "Declaration present in extracted text", passed: null, severity: "hard" },
           { label: "Extraction quality sufficient to judge absence", passed: false, severity: "soft" },
         ],
+        rule.applicability,
+        { status_summary: "Verification required — extraction quality too low", source_note: sourceNote(ctx) },
       );
     }
     return build(
       rule,
       "FAIL",
-      "No corresponding declaration was detected in the extracted text.",
+      "No corresponding declaration was detected in the submitted source. This is a screening result about the submitted material only, not a finding of legal non-compliance.",
       null,
       null,
       ctx.data.ocr_confidence,
-      "Verify the physical package. If the declaration is genuinely absent, add it and escalate for professional review.",
+      "Verify the physical package or authoritative product documentation before making a final determination.",
       presence,
+      rule.applicability,
+      { source_note: sourceNote(ctx) },
     );
   }
 
@@ -170,15 +212,18 @@ function evaluate(
 
   const hardFail = layers.find((l) => l.passed === false && l.severity === "hard");
   if (hardFail) {
+    // Related information WAS detected, so this is incomplete/ambiguous — not "not detected".
     return build(
       rule,
-      "FAIL",
-      `A declaration was found, but it did not satisfy a required validation: ${hardFail.label}.`,
+      "REVIEW",
+      `Related information was detected, but the declaration appears incomplete or invalid: ${hardFail.label}.`,
       value,
       evidence,
       conf,
-      "Correct the declaration format on the package, or correct the extracted text and re-run the analysis.",
+      "Verify the complete declaration against the physical package, or correct the extracted text and re-run the analysis.",
       layers,
+      rule.applicability,
+      { status_summary: "Incomplete information detected" },
     );
   }
 
@@ -188,12 +233,14 @@ function evaluate(
     return build(
       rule,
       "REVIEW",
-      `A declaration was found, but one validation could not be confirmed: ${softIssue.label}.`,
+      `A declaration was found, but one element could not be confirmed: ${softIssue.label}.`,
       value,
       evidence,
       conf,
       "Verify this declaration manually against the physical package.",
       layers,
+      rule.applicability,
+      { status_summary: "Partial information detected" },
     );
   }
   if (band === "LOW") {
@@ -206,6 +253,8 @@ function evaluate(
       conf,
       "Verify this declaration manually against the physical package.",
       layers,
+      rule.applicability,
+      { status_summary: "Verification required — weak extraction evidence" },
     );
   }
   return build(
@@ -219,6 +268,7 @@ function evaluate(
     layers,
   );
 }
+
 
 // ---------------------------------------------------------------- LM checks
 
