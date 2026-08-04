@@ -500,6 +500,7 @@ function foodCheck(
       ...result,
       status: "REVIEW",
       requires_human_review: true,
+      status_summary: "Verification required — product type uncertain",
       message:
         "The product was only tentatively classified as a food item and this declaration was not detected, so the result requires human verification.",
       recommended_action:
