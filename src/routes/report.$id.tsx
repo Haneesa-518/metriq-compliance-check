@@ -93,17 +93,23 @@ function ReportPage() {
         </dl>
       </header>
 
-      <Section title="Result summary">
+      <Section title="Overall screening result">
         <p className="text-sm">
-          Overall status: <strong>{record.summary.overall.replace("_", " ")}</strong> · Prototype
-          score: <strong>{record.summary.score}%</strong>
+          <strong>
+            {record.summary.overall === "COMPLIANT"
+              ? "NO SCREENING ISSUES DETECTED"
+              : "VERIFICATION REQUIRED"}
+          </strong>{" "}
+          · Screening coverage score: <strong>{record.summary.score}%</strong>
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          {record.summary.passed} passed, {record.summary.review} for review, {record.summary.failed}{" "}
-          failed across {record.summary.applicable} applicable checks (
-          {record.summary.not_applicable} not applicable).
+          {record.summary.passed} complete, {record.summary.review} partial / ambiguous,{" "}
+          {record.summary.failed} not detected in the submitted source, across{" "}
+          {record.summary.applicable} applicable checks ({record.summary.not_applicable} not
+          applicable). Automated screening coverage — not a legal compliance determination.
         </p>
       </Section>
+
 
       <Section title="Extracted declarations">
         <table className="w-full text-sm">
