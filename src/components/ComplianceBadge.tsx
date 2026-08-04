@@ -14,12 +14,9 @@ const MAP: Record<CheckStatus, { text: string; icon: string; cls: string }> = {
 
 export function ComplianceBadge({
   status,
-  meaning,
   className,
 }: {
   status: CheckStatus;
-  /** optional override for the plain-language meaning shown under the badge */
-  meaning?: string;
   className?: string;
 }) {
   const s = MAP[status];
