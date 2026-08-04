@@ -143,7 +143,7 @@ function ReportPage() {
         </table>
       </Section>
 
-      <Section title="Failed and review items">
+      <Section title="Items requiring verification">
         {flagged.length === 0 ? (
           <p className="text-sm text-muted-foreground">No items were flagged in this prototype run.</p>
         ) : (
