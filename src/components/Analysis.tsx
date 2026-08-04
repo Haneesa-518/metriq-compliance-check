@@ -302,8 +302,8 @@ export function ValidationList({ check }: { check: CheckResult }) {
 export function ExplanationPanel({ check }: { check: CheckResult }) {
   const rule = getRule(check.rule_reference);
   const rows = [
-    ["Result", check.status.replace("_", " ")],
-    ["Detected value", check.detected ?? "Not confidently detected"],
+    ["Result", `${STATUS_LABELS[check.status]} — ${check.status_summary}`],
+    ["Detected value", check.detected ?? "Not detected in submitted source"],
     ["Evidence", check.evidence ?? "Evidence not confidently located."],
     ["Expected", check.expected],
     ["Reason", check.message],
@@ -315,6 +315,8 @@ export function ExplanationPanel({ check }: { check: CheckResult }) {
     ],
     ["Recommended action", check.recommended_action],
   ] as const;
+  const detected = check.detected_components;
+  const missing = check.missing_components;
   return (
     <div className="space-y-3">
       <dl className="grid gap-3 sm:grid-cols-2">
@@ -325,12 +327,54 @@ export function ExplanationPanel({ check }: { check: CheckResult }) {
           </div>
         ))}
       </dl>
+      {(detected.length > 0 || missing.length > 0) && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="label-caps">Detected</p>
+            <ul className="mt-1 space-y-1 text-sm">
+              {detected.length > 0 ? (
+                detected.map((d) => (
+                  <li key={d} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-pass" />
+                    <span>{d}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-muted-foreground">
+                  No related information detected in the submitted source.
+                </li>
+              )}
+            </ul>
+          </div>
+          <div>
+            <p className="label-caps">Not detected</p>
+            <ul className="mt-1 space-y-1 text-sm">
+              {missing.length > 0 ? (
+                missing.map((m) => (
+                  <li key={m} className="flex items-start gap-2 text-muted-foreground">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-fail" />
+                    <span>{m}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-muted-foreground">Nothing missing from this declaration.</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+      {check.source_note && (
+        <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+          {check.source_note}
+        </p>
+      )}
       <div>
         <p className="label-caps">Validation steps</p>
         <div className="mt-1">
           <ValidationList check={check} />
         </div>
       </div>
+
       {check.requires_human_review && (
         <p className="rounded-md border border-review/40 bg-review/10 px-3 py-2 text-xs font-semibold text-review">
           HUMAN VERIFICATION REQUIRED
