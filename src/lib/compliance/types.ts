@@ -108,7 +108,31 @@ export interface CheckResult {
   applicability: string;
   recommended_action: string;
   requires_human_review: boolean;
+  /** short plain-language meaning of the status, e.g. "Partial information detected" */
+  status_summary: string;
+  /** components of the declaration that were detected */
+  detected_components: string[];
+  /** components of the declaration that were not detected */
+  missing_components: string[];
+  /** clarifies that the result describes the submitted source, not the physical package */
+  source_note: string | null;
 }
+
+/** Screening status labels and their plain-language meaning, shared by all UI surfaces. */
+export const STATUS_LABELS: Record<CheckStatus, string> = {
+  PASS: "PASS",
+  FAIL: "FAIL",
+  REVIEW: "REVIEW",
+  NOT_APPLICABLE: "NOT APPLICABLE",
+};
+
+export const STATUS_MEANINGS: Record<CheckStatus, string> = {
+  PASS: "Complete information detected",
+  FAIL: "Required information not detected",
+  REVIEW: "Partial / ambiguous information",
+  NOT_APPLICABLE: "Rule does not apply",
+};
+
 
 export interface CategorySummary {
   passed: number;

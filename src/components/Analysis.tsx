@@ -1,29 +1,27 @@
 import { Fragment, useState } from "react";
 import { AlertTriangle, Check, Minus, X } from "lucide-react";
 import type { AnalysisRecord, CheckResult, ExtractedData } from "@/lib/compliance/types";
-import { FIELD_SOURCE_LABELS } from "@/lib/compliance/types";
-import { ComplianceBadge, ConfidenceIndicator } from "@/components/ComplianceBadge";
+import { FIELD_SOURCE_LABELS, STATUS_LABELS } from "@/lib/compliance/types";
+import { ComplianceBadge, ComplianceStatus, ConfidenceIndicator } from "@/components/ComplianceBadge";
 import { getRule } from "@/lib/legal/rules.data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
-  COMPLIANT: "NO ISSUES FOUND (screening)",
-  NON_COMPLIANT: "ISSUES FOUND (screening)",
-  NEEDS_REVIEW: "REQUIRES REVIEW",
+  COMPLIANT: "NO SCREENING ISSUES DETECTED",
+  NON_COMPLIANT: "VERIFICATION REQUIRED",
+  NEEDS_REVIEW: "VERIFICATION REQUIRED",
 };
 
 export const SCORE_DISCLAIMER =
-  "This score represents automated screening coverage and does not constitute a legal determination of compliance.";
+  "Automated screening coverage — not a legal compliance determination.";
+
+export const SCREENING_DISCLAIMER =
+  "AI-assisted screening prototype. Results indicate information detected or not detected in the submitted source and do not constitute a legal determination. Final verification must be performed by a qualified human authority.";
 
 export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["summary"] }) {
-  const tone =
-    summary.overall === "COMPLIANT"
-      ? "text-pass"
-      : summary.overall === "NON_COMPLIANT"
-        ? "text-fail"
-        : "text-review";
+  const tone = summary.overall === "COMPLIANT" ? "text-pass" : "text-review";
   const stats = [
     { label: "Pass", value: summary.passed, tone: "text-pass" },
     { label: "Review", value: summary.review, tone: "text-review" },
@@ -38,10 +36,14 @@ export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["su
           <p className={cn("mt-1 text-2xl font-semibold", tone)}>{OVERALL_LABEL[summary.overall]}</p>
         </div>
         <div className="text-right">
-          <p className="label-caps">Compliance screening score</p>
+          <p className="label-caps">Screening coverage score</p>
           <p className="mt-1 font-mono text-2xl font-semibold text-primary">{summary.score}%</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Screening coverage
+          </p>
         </div>
       </div>
+
 
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((s) => (
@@ -69,6 +71,8 @@ export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["su
         over {summary.applicable} applicable checks. Not-applicable checks are excluded entirely.{" "}
         {SCORE_DISCLAIMER}
       </p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{SCREENING_DISCLAIMER}</p>
+
     </div>
   );
 }
@@ -99,7 +103,10 @@ export function CriticalIssuesCard({ summary }: { summary: AnalysisRecord["summa
     <div className="panel p-5">
       {summary.critical_issues.length > 0 && (
         <>
-          <p className="label-caps text-fail">Critical issues ({summary.critical_issues.length})</p>
+          <p className="label-caps text-fail">
+            Required information not detected ({summary.critical_issues.length})
+          </p>
+
           <ol className="mt-3 space-y-2">
             {summary.critical_issues.map((issue, i) => (
               <li key={i} className="flex gap-2 text-sm leading-relaxed">
@@ -238,11 +245,12 @@ function CheckGroupTable({ checks }: { checks: CheckResult[] }) {
                 >
                   <td className="px-4 py-3 font-medium">{c.label}</td>
                   <td className="px-4 py-3">
-                    <ComplianceBadge status={c.status} />
+                    <ComplianceStatus status={c.status} meaning={c.status_summary} />
                   </td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
-                    {c.detected ?? "Not detected"}
+                    {c.detected ?? "Not detected in submitted source"}
                   </td>
+
                   <td className="hidden px-4 py-3 lg:table-cell">
                     {c.status === "NOT_APPLICABLE" ? (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -294,8 +302,8 @@ export function ValidationList({ check }: { check: CheckResult }) {
 export function ExplanationPanel({ check }: { check: CheckResult }) {
   const rule = getRule(check.rule_reference);
   const rows = [
-    ["Result", check.status.replace("_", " ")],
-    ["Detected value", check.detected ?? "Not confidently detected"],
+    ["Result", `${STATUS_LABELS[check.status]} — ${check.status_summary}`],
+    ["Detected value", check.detected ?? "Not detected in submitted source"],
     ["Evidence", check.evidence ?? "Evidence not confidently located."],
     ["Expected", check.expected],
     ["Reason", check.message],
@@ -307,6 +315,8 @@ export function ExplanationPanel({ check }: { check: CheckResult }) {
     ],
     ["Recommended action", check.recommended_action],
   ] as const;
+  const detected = check.detected_components;
+  const missing = check.missing_components;
   return (
     <div className="space-y-3">
       <dl className="grid gap-3 sm:grid-cols-2">
@@ -317,12 +327,54 @@ export function ExplanationPanel({ check }: { check: CheckResult }) {
           </div>
         ))}
       </dl>
+      {missing.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="label-caps">Detected</p>
+            <ul className="mt-1 space-y-1 text-sm">
+              {detected.length > 0 ? (
+                detected.map((d) => (
+                  <li key={d} className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-pass" />
+                    <span>{d}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-muted-foreground">
+                  No related information detected in the submitted source.
+                </li>
+              )}
+            </ul>
+          </div>
+          <div>
+            <p className="label-caps">Not detected</p>
+            <ul className="mt-1 space-y-1 text-sm">
+              {missing.length > 0 ? (
+                missing.map((m) => (
+                  <li key={m} className="flex items-start gap-2 text-muted-foreground">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-fail" />
+                    <span>{m}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-muted-foreground">Nothing missing from this declaration.</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+      {check.source_note && (
+        <p className="rounded-md border border-border bg-surface px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+          {check.source_note}
+        </p>
+      )}
       <div>
         <p className="label-caps">Validation steps</p>
         <div className="mt-1">
           <ValidationList check={check} />
         </div>
       </div>
+
       {check.requires_human_review && (
         <p className="rounded-md border border-review/40 bg-review/10 px-3 py-2 text-xs font-semibold text-review">
           HUMAN VERIFICATION REQUIRED
@@ -416,10 +468,8 @@ export function DisclaimerNote({ className }: { className?: string }) {
       )}
     >
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-      <span>
-        Compliance screening prototype. AI assists extraction; deterministic rules flag issues and a
-        human makes the final decision. Results are not legal advice.
-      </span>
+      <span>{SCREENING_DISCLAIMER}</span>
+
     </div>
   );
 }

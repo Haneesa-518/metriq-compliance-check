@@ -93,17 +93,23 @@ function ReportPage() {
         </dl>
       </header>
 
-      <Section title="Result summary">
+      <Section title="Overall screening result">
         <p className="text-sm">
-          Overall status: <strong>{record.summary.overall.replace("_", " ")}</strong> · Prototype
-          score: <strong>{record.summary.score}%</strong>
+          <strong>
+            {record.summary.overall === "COMPLIANT"
+              ? "NO SCREENING ISSUES DETECTED"
+              : "VERIFICATION REQUIRED"}
+          </strong>{" "}
+          · Screening coverage score: <strong>{record.summary.score}%</strong>
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          {record.summary.passed} passed, {record.summary.review} for review, {record.summary.failed}{" "}
-          failed across {record.summary.applicable} applicable checks (
-          {record.summary.not_applicable} not applicable).
+          {record.summary.passed} complete, {record.summary.review} partial / ambiguous,{" "}
+          {record.summary.failed} not detected in the submitted source, across{" "}
+          {record.summary.applicable} applicable checks ({record.summary.not_applicable} not
+          applicable). Automated screening coverage — not a legal compliance determination.
         </p>
       </Section>
+
 
       <Section title="Extracted declarations">
         <table className="w-full text-sm">
@@ -137,7 +143,7 @@ function ReportPage() {
         </table>
       </Section>
 
-      <Section title="Failed and review items">
+      <Section title="Items requiring verification">
         {flagged.length === 0 ? (
           <p className="text-sm text-muted-foreground">No items were flagged in this prototype run.</p>
         ) : (
@@ -145,19 +151,26 @@ function ReportPage() {
             {flagged.map((c) => (
               <li key={c.rule_reference} className="text-sm">
                 <p className="font-medium">
-                  {c.label} — {c.status}
+                  {c.label} — {c.status_summary}
                 </p>
                 <p className="text-muted-foreground">{c.message}</p>
+                {c.missing_components.length > 0 && (
+                  <p className="text-muted-foreground">
+                    Missing: {c.missing_components.join(", ")}
+                  </p>
+                )}
                 <p className="text-muted-foreground">
-                  Detected: {c.detected ?? "Not confidently detected"} · Confidence{" "}
-                  {Math.round(c.confidence * 100)}% · Reference{" "}
+                  Detected: {c.detected ?? "Not detected in submitted source"} · Extraction
+                  confidence {c.confidence_band} · Reference{" "}
                   <span className="font-mono">{c.rule_reference}</span>
                 </p>
+                <p className="text-muted-foreground">{c.recommended_action}</p>
               </li>
             ))}
           </ul>
         )}
       </Section>
+
 
       <Section title="Rule references">
         <ul className="space-y-2 text-sm">
