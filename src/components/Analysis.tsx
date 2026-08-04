@@ -468,10 +468,8 @@ export function DisclaimerNote({ className }: { className?: string }) {
       )}
     >
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-      <span>
-        Compliance screening prototype. AI assists extraction; deterministic rules flag issues and a
-        human makes the final decision. Results are not legal advice.
-      </span>
+      <span>{SCREENING_DISCLAIMER}</span>
+
     </div>
   );
 }
