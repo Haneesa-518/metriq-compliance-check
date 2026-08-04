@@ -245,11 +245,12 @@ function CheckGroupTable({ checks }: { checks: CheckResult[] }) {
                 >
                   <td className="px-4 py-3 font-medium">{c.label}</td>
                   <td className="px-4 py-3">
-                    <ComplianceBadge status={c.status} />
+                    <ComplianceStatus status={c.status} meaning={c.status_summary} />
                   </td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
-                    {c.detected ?? "Not detected"}
+                    {c.detected ?? "Not detected in submitted source"}
                   </td>
+
                   <td className="hidden px-4 py-3 lg:table-cell">
                     {c.status === "NOT_APPLICABLE" ? (
                       <span className="text-xs text-muted-foreground">—</span>
