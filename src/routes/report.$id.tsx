@@ -151,19 +151,26 @@ function ReportPage() {
             {flagged.map((c) => (
               <li key={c.rule_reference} className="text-sm">
                 <p className="font-medium">
-                  {c.label} — {c.status}
+                  {c.label} — {c.status_summary}
                 </p>
                 <p className="text-muted-foreground">{c.message}</p>
+                {c.missing_components.length > 0 && (
+                  <p className="text-muted-foreground">
+                    Missing: {c.missing_components.join(", ")}
+                  </p>
+                )}
                 <p className="text-muted-foreground">
-                  Detected: {c.detected ?? "Not confidently detected"} · Confidence{" "}
-                  {Math.round(c.confidence * 100)}% · Reference{" "}
+                  Detected: {c.detected ?? "Not detected in submitted source"} · Extraction
+                  confidence {c.confidence_band} · Reference{" "}
                   <span className="font-mono">{c.rule_reference}</span>
                 </p>
+                <p className="text-muted-foreground">{c.recommended_action}</p>
               </li>
             ))}
           </ul>
         )}
       </Section>
+
 
       <Section title="Rule references">
         <ul className="space-y-2 text-sm">
