@@ -141,7 +141,56 @@ export interface CheckResult {
   missing_components: string[];
   /** clarifies that the result describes the submitted source, not the physical package */
   source_note: string | null;
+  /** issue severity used to prioritise human review */
+  severity: Severity;
+  /** numeric ordering weight — higher means "review this first" */
+  priority: number;
+  /** hierarchical rule group this check belongs to */
+  rule_group: string;
+  /** whether the rule was applicable, not applicable, or could not be decided */
+  applicability_decision: ApplicabilityDecision;
+  /** why the applicability engine reached that decision */
+  applicability_reason: string;
+  /** VERIFIED rules are binding screening results; unverified ones are advisory */
+  rule_verification: "VERIFIED" | "NEEDS_VERIFICATION";
+  binding: boolean;
 }
+
+export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export type ApplicabilityDecision = "APPLICABLE" | "NOT_APPLICABLE" | "UNCERTAIN";
+
+export const SEVERITY_WEIGHT: Record<Severity, number> = {
+  CRITICAL: 100,
+  HIGH: 70,
+  MEDIUM: 40,
+  LOW: 15,
+};
+
+/** A cross-field or cross-source inconsistency found between declarations. */
+export interface Discrepancy {
+  id: string;
+  label: string;
+  severity: Severity;
+  priority: number;
+  message: string;
+  evidence: string | null;
+  fields: string[];
+  recommended_action: string;
+}
+
+/** One prioritised entry in the "Review first" dashboard section. */
+export interface ReviewItem {
+  kind: "check" | "discrepancy";
+  key: string;
+  title: string;
+  severity: Severity;
+  priority: number;
+  status: CheckStatus | "DISCREPANCY";
+  reason: string;
+  action: string;
+}
+
 
 /** Screening status labels and their plain-language meaning, shared by all UI surfaces. */
 export const STATUS_LABELS: Record<CheckStatus, string> = {
