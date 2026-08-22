@@ -90,25 +90,71 @@ function lineAfter(lines: string[], re: RegExp): { value: string; evidence: stri
   return null;
 }
 
-/** Deterministic package-context detection (drives rule applicability). */
+const DOMESTIC_ORIGIN_RE = /country\s*of\s*origin\s*[:\-]?\s*india\b/i;
+const IMPORT_RE = /imported\s+by|importer\b|country\s*of\s*origin/i;
+const NON_FOOD_HINT_RE =
+  /shampoo|soap|detergent|cosmetic|cream|lotion|cement|paint|battery|cable|electronic|garment|textile|shoe|footwear|stationery|toy\b/i;
+
+/** Deterministic package-context detection (drives rule applicability only). */
 export function detectContext(rawText: string, fields: Record<string, ExtractedField>): PackageContext {
   const text = rawText || "";
-  const importMatch = text.match(/imported\s+by[^\n]*|country\s+of\s+origin[^\n]*|importer[^\n]*/i);
-  const is_imported = Boolean(
-    fields.importer?.value || fields.country_of_origin?.value || importMatch,
-  );
 
+  // ---- import classification (three-state; absence of evidence ≠ imported) ----
+  const originValue = fields.country_of_origin?.value ?? null;
+  const domesticOrigin =
+    DOMESTIC_ORIGIN_RE.test(text) || /^india$/i.test((originValue ?? "").trim());
+  const importerValue = fields.importer?.value ?? null;
+  const importMatch = text.match(/imported\s+by[^\n]*|country\s+of\s+origin[^\n]*|importer[^\n]*/i);
+
+  let import_status: ImportStatus;
+  let import_reason: string;
+  let import_evidence: string | null = importMatch ? importMatch[0].trim().slice(0, 160) : null;
+
+  if (domesticOrigin && !importerValue) {
+    import_status = "DOMESTIC";
+    import_reason =
+      'The label declares "Country of Origin: India" and no importer declaration was detected, so the product is treated as domestically produced.';
+  } else if (importerValue || /imported\s+by/i.test(text)) {
+    import_status = "IMPORTED";
+    import_reason =
+      "An explicit importer declaration was detected, so importer and country-of-origin rules are applicable.";
+  } else if (originValue || IMPORT_RE.test(text)) {
+    import_status = "UNCERTAIN";
+    import_reason =
+      "Import-related wording was detected but no explicit importer declaration was found, so import status could not be established.";
+  } else {
+    import_status = "DOMESTIC";
+    import_reason =
+      "No import-related declaration was detected in the submitted source, so the product is screened as domestic. Absence of evidence is not treated as an import failure.";
+    import_evidence = null;
+  }
+
+  // ---- product classification ----
   const strongFood =
     Boolean(fields.ingredients_list?.value) ||
     Boolean(fields.fssai_licence?.value) ||
     Boolean(fields.veg_nonveg_mark?.value) ||
     Boolean(fields.best_before?.value);
   const foodMatch = text.match(FOOD_HINT_RE);
+  const nonFoodMatch = text.match(NON_FOOD_HINT_RE);
   const is_food = strongFood || Boolean(foodMatch);
 
+  const product_category: ProductCategory = is_food
+    ? "food"
+    : nonFoodMatch
+      ? "non_food"
+      : "unknown";
+  const category_reason = strongFood
+    ? "Food-specific declarations (ingredients, FSSAI licence, veg/non-veg mark or best-before) were detected."
+    : foodMatch
+      ? `Food-related wording detected: "${foodMatch[0]}".`
+      : nonFoodMatch
+        ? `Non-food product wording detected: "${nonFoodMatch[0]}".`
+        : "No food or non-food indicators were detected; food-labelling rules are treated as not applicable.";
+
   return {
-    is_imported,
-    imported_signal: importMatch ? importMatch[0].trim().slice(0, 120) : null,
+    is_imported: import_status === "IMPORTED",
+    imported_signal: import_evidence,
     is_food,
     food_signal: strongFood
       ? "Food-specific declarations detected on the label."
@@ -116,8 +162,23 @@ export function detectContext(rawText: string, fields: Record<string, ExtractedF
         ? `Food-related wording detected: "${foodMatch[0]}"`
         : null,
     food_certainty: strongFood ? "certain" : is_food ? "uncertain" : "certain",
+    import_status,
+    import_evidence,
+    import_reason,
+    product_category,
+    product_subcategory: nonFoodMatch ? nonFoodMatch[0].toLowerCase() : null,
+    category_reason,
+    attributes: {
+      has_ingredients: Boolean(fields.ingredients_list?.value),
+      has_fssai_licence: Boolean(fields.fssai_licence?.value),
+      has_veg_mark: Boolean(fields.veg_nonveg_mark?.value),
+      has_best_before: Boolean(fields.best_before?.value),
+      has_importer: Boolean(importerValue),
+      has_country_of_origin: Boolean(originValue),
+    },
   };
 }
+
 
 /**
  * Deterministic, explainable field extraction from raw OCR text.
