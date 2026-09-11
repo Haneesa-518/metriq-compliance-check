@@ -93,7 +93,21 @@ function build(
   extra: Extra = {},
 ): CheckResult {
   const conf = Math.round(Math.max(0, Math.min(1, confidence)) * 100) / 100;
+  const meta = priorityFor(rule.field);
+  const statusWeight =
+    status === "FAIL" ? 12 : status === "REVIEW" ? 6 : status === "PASS" ? -100 : -200;
+  const applicability_decision: ApplicabilityDecision =
+    status === "NOT_APPLICABLE" ? "NOT_APPLICABLE" : status === "REVIEW" ? "UNCERTAIN" : "APPLICABLE";
   return {
+    severity: meta.priority,
+    priority_reason: meta.reason,
+    legal_severity: LEGAL_SEVERITY_NOTE,
+    priority: SEVERITY_WEIGHT[meta.priority] + statusWeight,
+    rule_group: meta.group,
+    applicability_decision,
+    applicability_reason: applicability,
+    rule_verification: rule.status,
+    binding: rule.status === "VERIFIED",
     status,
     field: rule.field,
     label: rule.title,
