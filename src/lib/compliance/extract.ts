@@ -1,4 +1,12 @@
-import { bandFor, type ExtractedData, type ExtractedField, type FieldSource, type PackageContext } from "./types";
+import {
+  bandFor,
+  type ExtractedData,
+  type ExtractedField,
+  type FieldSource,
+  type ImportStatus,
+  type PackageContext,
+  type ProductCategory,
+} from "./types";
 
 export const FIELD_LABELS: Record<string, string> = {
   product_name: "Product / commodity name",
