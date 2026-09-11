@@ -507,3 +507,107 @@ export function rulesInCategory(category: RuleCategory): LegalRule[] {
 export function ruleForField(field: string): LegalRule | undefined {
   return LEGAL_RULES.find((r) => r.field === field);
 }
+
+/**
+ * Operational inspection priority — a METRIQ screening-workflow signal, NOT a
+ * ranking established by the Legal Metrology (Packaged Commodities) Rules,
+ * 2011. The source law does not rank declarations by priority, so legal
+ * severity is reported separately as "Not explicitly ranked in source".
+ */
+export type OperationalPriority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export const LEGAL_SEVERITY_NOTE = "Not explicitly ranked in source";
+
+interface PriorityMeta {
+  priority: OperationalPriority;
+  reason: string;
+  group: string;
+}
+
+const DEFAULT_PRIORITY: PriorityMeta = {
+  priority: "MEDIUM",
+  reason: "Declaration affects completeness of the mandatory label information.",
+  group: "Declarations",
+};
+
+export const FIELD_PRIORITY: Record<string, PriorityMeta> = {
+  net_quantity: {
+    priority: "CRITICAL",
+    reason: "Quantity declaration directly affects what the consumer pays for.",
+    group: "Quantity",
+  },
+  mrp: {
+    priority: "CRITICAL",
+    reason: "Retail sale price is the primary price-deception risk for consumers.",
+    group: "Pricing",
+  },
+  unit_sale_price: {
+    priority: "MEDIUM",
+    reason: "Unit sale price supports price comparison but is secondary to the retail sale price.",
+    group: "Pricing",
+  },
+  manufacturer: {
+    priority: "HIGH",
+    reason: "Mandatory identity declaration affecting product traceability.",
+    group: "Identity & traceability",
+  },
+  packer: {
+    priority: "HIGH",
+    reason: "Mandatory identity declaration affecting product traceability.",
+    group: "Identity & traceability",
+  },
+  importer: {
+    priority: "HIGH",
+    reason: "Importer identity is required for traceability of imported goods.",
+    group: "Identity & traceability",
+  },
+  address: {
+    priority: "HIGH",
+    reason: "Address of the responsible entity is required to contact the seller of record.",
+    group: "Identity & traceability",
+  },
+  country_of_origin: {
+    priority: "HIGH",
+    reason: "Country of origin affects consumer choice and applies to imported goods.",
+    group: "Identity & traceability",
+  },
+  date_of_manufacture: {
+    priority: "HIGH",
+    reason: "Manufacture / packing date is required for traceability and shelf-life assessment.",
+    group: "Dates",
+  },
+  best_before: {
+    priority: "HIGH",
+    reason: "Shelf-life information affects consumer safety for food products.",
+    group: "Dates",
+  },
+  consumer_care: {
+    priority: "MEDIUM",
+    reason: "Consumer complaint contact details support redress but are not price or quantity related.",
+    group: "Consumer redress",
+  },
+  product_name: {
+    priority: "HIGH",
+    reason: "The commodity identity determines which conditional requirements apply.",
+    group: "Identity & traceability",
+  },
+  ingredients_list: {
+    priority: "HIGH",
+    reason: "Ingredient information affects consumer safety and allergen awareness.",
+    group: "Food labelling",
+  },
+  veg_nonveg_mark: {
+    priority: "HIGH",
+    reason: "Vegetarian / non-vegetarian marking affects dietary and religious choice.",
+    group: "Food labelling",
+  },
+  fssai_licence: {
+    priority: "HIGH",
+    reason: "Food business licence number is required for enforcement traceability.",
+    group: "Food labelling",
+  },
+};
+
+export function priorityFor(field: string): PriorityMeta {
+  return FIELD_PRIORITY[field] ?? DEFAULT_PRIORITY;
+}
