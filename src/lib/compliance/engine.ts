@@ -650,19 +650,115 @@ export function buildRecommendations(checks: CheckResult[]): string[] {
   return recs;
 }
 
+/**
+ * Cross-field / cross-source consistency screening. These are deterministic
+ * comparisons of declarations that are already extracted — never AI judgements.
+ */
+export function detectDiscrepancies(data: ExtractedData): Discrepancy[] {
+  const out: Discrepancy[] = [];
+  const text = data.raw_text || "";
+
+  const prices = Array.from(
+    new Set(
+      Array.from(text.matchAll(/(?:mrp|m\.r\.p|retail\s+sale\s+price)[^0-9]{0,20}([0-9]+(?:\.[0-9]{1,2})?)/gi)).map(
+        (m) => m[1],
+      ),
+    ),
+  );
+  if (prices.length > 1) {
+    out.push({
+      id: "mrp-mismatch",
+      label: "Conflicting retail sale price declarations",
+      severity: "CRITICAL",
+      priority: SEVERITY_WEIGHT.CRITICAL + 12,
+      message: `More than one retail sale price was detected in the submitted source (${prices.join(", ")}). Do not assume which one applies.`,
+      evidence: prices.join(" / "),
+      fields: ["mrp"],
+      recommended_action:
+        "Compare the price printed on the physical package with the price displayed at the point of sale and record both.",
+    });
+  }
+
+  const quantities = Array.from(
+    new Set(
+      Array.from(
+        text.matchAll(/(?:net\s*(?:qty|quantity|wt|weight|content))[^0-9]{0,15}([0-9]+(?:\.[0-9]+)?\s*(?:g|kg|ml|l|mg)\b)/gi),
+      ).map((m) => m[1].replace(/\s+/g, " ").toLowerCase()),
+    ),
+  );
+  if (quantities.length > 1) {
+    out.push({
+      id: "net-quantity-mismatch",
+      label: "Conflicting net quantity declarations",
+      severity: "HIGH",
+      priority: SEVERITY_WEIGHT.HIGH + 12,
+      message: `More than one net quantity was detected in the submitted source (${quantities.join(", ")}).`,
+      evidence: quantities.join(" / "),
+      fields: ["net_quantity"],
+      recommended_action: "Verify the declared net quantity on the principal display panel of the package.",
+    });
+  }
+
+  const origin = data.fields.country_of_origin?.value ?? null;
+  const importer = data.fields.importer?.value ?? null;
+  if (importer && origin && /^\s*india\s*$/i.test(origin)) {
+    out.push({
+      id: "origin-importer-conflict",
+      label: "Importer declared but country of origin shown as India",
+      severity: "MEDIUM",
+      priority: SEVERITY_WEIGHT.MEDIUM + 6,
+      message:
+        "The source declares an importer and also states India as the country of origin. These are normally inconsistent for an imported package.",
+      evidence: `${importer} / ${origin}`,
+      fields: ["importer", "country_of_origin"],
+      recommended_action: "Confirm whether the package is imported and which declaration is correct.",
+    });
+  }
+
+  return out;
+}
+
+/** Prioritised "review first" list for the inspector. */
+export function buildReviewList(checks: CheckResult[], discrepancies: Discrepancy[]): ReviewItem[] {
+  const items: ReviewItem[] = [];
+  for (const c of checks) {
+    if (c.status !== "FAIL" && c.status !== "REVIEW") continue;
+    items.push({
+      kind: "check",
+      key: c.rule_reference,
+      title: c.label,
+      severity: c.severity,
+      priority: c.priority,
+      status: c.status,
+      reason: c.priority_reason ?? c.message,
+      action: c.recommended_action,
+    });
+  }
+  for (const d of discrepancies) {
+    items.push({
+      kind: "discrepancy",
+      key: d.id,
+      title: d.label,
+      severity: d.severity,
+      priority: d.priority,
+      status: "DISCREPANCY",
+      reason: d.message,
+      action: d.recommended_action,
+    });
+  }
+  return items.sort((a, b) => b.priority - a.priority);
+}
+
 /** Deterministic rule engine entry point. */
 export function runRuleEngine(data: ExtractedData) {
-  const pkg: PackageContext = data.context ?? {
-    is_imported: /imported\s+by|country\s+of\s+origin|importer/i.test(data.raw_text || ""),
-    imported_signal: null,
-    is_food: false,
-    food_signal: null,
-    food_certainty: "certain",
-  };
+  const pkg: PackageContext = data.context ?? detectContext(data.raw_text || "", data.fields);
   const ctx: Ctx = { data, pkg, listing: data.analysis_context === "ecommerce_listing" };
   const checks = CHECKS.map((fn) => fn(ctx));
+  const discrepancies = detectDiscrepancies(data);
   return {
     checks,
+    discrepancies,
+    review_first: buildReviewList(checks, discrepancies),
     summary: summarize(checks),
     recommendations: buildRecommendations(checks),
   };
