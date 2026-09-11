@@ -10,6 +10,8 @@ import {
   bandFor,
   SEVERITY_WEIGHT,
   type ApplicabilityDecision,
+  type Discrepancy,
+  type ReviewItem,
   type CategorySummary,
   type CheckResult,
   type CheckStatus,
