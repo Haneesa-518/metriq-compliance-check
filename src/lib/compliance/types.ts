@@ -141,8 +141,12 @@ export interface CheckResult {
   missing_components: string[];
   /** clarifies that the result describes the submitted source, not the physical package */
   source_note: string | null;
-  /** issue severity used to prioritise human review */
+  /** METRIQ operational inspection priority (not a legally mandated ranking) */
   severity: Severity;
+  /** transparent reason for the operational priority */
+  priority_reason?: string;
+  /** what the source law itself says about ranking this violation */
+  legal_severity?: string;
   /** numeric ordering weight — higher means "review this first" */
   priority: number;
   /** hierarchical rule group this check belongs to */
