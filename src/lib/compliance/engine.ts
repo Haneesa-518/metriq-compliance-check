@@ -1,7 +1,15 @@
-import { LEGAL_RULES, ruleForField, type LegalRule } from "@/lib/legal/rules.data";
-import { degradedText } from "./extract";
+import {
+  LEGAL_RULES,
+  LEGAL_SEVERITY_NOTE,
+  priorityFor,
+  ruleForField,
+  type LegalRule,
+} from "@/lib/legal/rules.data";
+import { degradedText, detectContext } from "./extract";
 import {
   bandFor,
+  SEVERITY_WEIGHT,
+  type ApplicabilityDecision,
   type CategorySummary,
   type CheckResult,
   type CheckStatus,
