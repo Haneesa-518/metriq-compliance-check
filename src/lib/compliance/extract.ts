@@ -217,26 +217,44 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
     null;
   fields.product_name = field("product_name", nameLine, nameLine ? 0.72 : 0, named?.evidence ?? nameLine);
 
-  const manufacturer = lineAfter(
-    lines,
-    /manufactured\s*(?:&|and)?\s*(?:packed)?\s*by|mfd?\.?\s*by|manufacturer/i,
+  // Role-aware entity extraction: the role marker decides the field, never the
+  // mere presence of a company name.
+  const declarations = extractEntityDeclarations(lines);
+  const manufacturer = declarationFor(declarations, "manufacturer");
+  const packer = declarationFor(declarations, "packer");
+  const importer = declarationFor(declarations, "importer");
+  const ambiguous = declarationFor(declarations, "ambiguous");
+
+  fields.manufacturer = field(
+    "manufacturer",
+    manufacturer?.name ?? null,
+    manufacturer?.confidence ?? 0,
+    manufacturer?.evidence ?? null,
   );
-  fields.manufacturer = field("manufacturer", manufacturer?.value ?? null, 0.78, manufacturer?.evidence);
+  fields.packer = field("packer", packer?.name ?? null, packer?.confidence ?? 0, packer?.evidence ?? null);
+  fields.importer = field(
+    "importer",
+    importer?.name ?? null,
+    importer?.confidence ?? 0,
+    importer?.evidence ?? null,
+  );
 
-  const packer = lineAfter(lines, /packed\s*by|packer/i);
-  fields.packer = field("packer", packer?.value ?? null, 0.7, packer?.evidence);
+  // An ambiguous "Marketed by" / "Distributed by" entity is recorded at low
+  // confidence only when no role-specific declaration was found, so the rule
+  // engine treats it as needing human review rather than as a mandatory role.
+  if (!manufacturer && !packer && ambiguous) {
+    fields.manufacturer = field("manufacturer", ambiguous.name, 0.35, ambiguous.evidence);
+  }
 
-  const importer = lineAfter(lines, /imported\s*by|importer/i);
-  fields.importer = field("importer", importer?.value ?? null, 0.78, importer?.evidence);
-
+  const roleAddress = manufacturer?.address ?? packer?.address ?? importer?.address ?? null;
   const addressByPin = lines.find((l) => PIN_RE.test(l) && l.length > 10) ?? null;
-  const addressLabelled = addressByPin ? null : lineAfter(lines, /address/i);
-  const addressLine = addressByPin ?? addressLabelled?.value ?? null;
+  const addressLabelled = roleAddress || addressByPin ? null : lineAfter(lines, /address/i);
+  const addressLine = roleAddress ?? addressByPin ?? addressLabelled?.value ?? null;
   fields.address = field(
     "address",
     addressLine,
-    addressByPin ? 0.8 : 0.5,
-    addressByPin ?? addressLabelled?.evidence,
+    roleAddress ? 0.85 : addressByPin ? 0.8 : 0.5,
+    roleAddress ?? addressByPin ?? addressLabelled?.evidence,
   );
 
   const qtyMatch = text.match(NET_QTY_RE);
