@@ -34,8 +34,15 @@ function ReportPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setRecord(getAnalysis(id));
-    setLoaded(true);
+    let active = true;
+    void getAnalysis(id).then((r) => {
+      if (!active) return;
+      setRecord(r);
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   if (!loaded) return null;

@@ -6,6 +6,7 @@ import { runRuleEngine } from "@/lib/compliance/engine";
 import { extractFieldsFromText } from "@/lib/compliance/extract";
 import { DEMO_CASES, type DemoCase } from "@/lib/demo/demo-cases";
 import { saveAnalysis } from "@/lib/analysis-store";
+import { prepareImage } from "@/lib/image/preprocess";
 import type { AnalysisRecord } from "@/lib/compliance/types";
 
 function newId() {
@@ -15,11 +16,17 @@ function newId() {
 export function friendlyError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
   if (msg.includes("AI_KEY_MISSING"))
-    return "The AI extraction service is not configured. Use Demo Mode to see the full workflow.";
-  if (msg.includes("AI_RATE_LIMIT")) return "Too many requests right now. Please retry in a moment.";
-  if (msg.includes("AI_CREDITS")) return "AI usage limit reached. Use Demo Mode to continue the demonstration.";
+    return "Image analysis could not be completed: the text-extraction service is not configured on the server. Use Demo Mode to see the full workflow.";
+  if (msg.includes("AI_RATE_LIMIT"))
+    return "Image analysis could not be completed: the extraction service is rate-limiting requests. Please retry in a moment.";
+  if (msg.includes("AI_CREDITS"))
+    return "Image analysis could not be completed: the extraction service usage limit was reached. Use Demo Mode to continue the demonstration.";
+  if (msg.includes("AI_TIMEOUT"))
+    return "Image analysis could not be completed: the extraction service did not respond in time. Try again, or upload a smaller/sharper photo.";
+  if (msg.includes("IMAGE_TOO_SMALL"))
+    return "That image is too small to read reliably. Upload a photo of at least 200 × 200 pixels.";
   if (msg.includes("OCR_EMPTY"))
-    return "No readable text could be extracted from that image. Try a sharper, well-lit photo.";
+    return "No readable text could be extracted from that image. Try a sharper, well-lit, straight-on photo of the label.";
   if (msg.includes("URL_EMPTY")) return "Please enter a product URL.";
   if (msg.includes("URL_INVALID")) return "Please enter a valid product URL.";
   if (msg.includes("URL_UNSUPPORTED"))
@@ -36,7 +43,9 @@ export function friendlyError(err: unknown): string {
     return "We couldn't access this product page. Try uploading a screenshot instead.";
   if (msg.includes("PAGE_INSUFFICIENT"))
     return "Insufficient product information was found on this page. Try a different listing URL or upload a package image.";
-  if (msg.includes("AI_ERROR")) return "The extraction service returned an error. Please try again.";
+  const aiError = msg.match(/AI_ERROR_(\d{3})/);
+  if (aiError)
+    return `Image analysis could not be completed: the extraction service returned status ${aiError[1]}. Please try again.`;
   if (/Only JPG|too large|too big/i.test(msg)) return msg;
   if (/fetch|network|Failed to fetch/i.test(msg))
     return "Could not reach the analysis service. Check your connection and try again.";
@@ -44,16 +53,19 @@ export function friendlyError(err: unknown): string {
 }
 
 export async function analyzeProduct(imageDataUrl: string): Promise<AnalysisRecord> {
-  const result = await analyzeImage({ data: { image_data_url: imageDataUrl } });
+  // The original image is preserved as evidence; only a downscaled copy is sent.
+  const prepared = await prepareImage(imageDataUrl);
+  const result = await analyzeImage({ data: { image_data_url: prepared.processed } });
   const record: AnalysisRecord = {
     id: newId(),
     created_at: new Date().toISOString(),
-    image_data_url: imageDataUrl,
+    image_data_url: prepared.original,
+    processed_image_data_url: prepared.processed === prepared.original ? null : prepared.processed,
     is_demo: false,
     analysis_source: "image_upload",
     ...result,
   };
-  saveAnalysis(record);
+  await saveAnalysis(record);
   return record;
 }
 
@@ -70,7 +82,7 @@ export async function analyzeProductUrl(url: string): Promise<AnalysisRecord> {
     page_title: page.title,
     ...analysis,
   };
-  saveAnalysis(record);
+  await saveAnalysis(record);
   return record;
 }
 
@@ -85,13 +97,23 @@ export async function reanalyzeText(
       listing: previous.analysis_source === "ecommerce_url",
     },
   });
-  const record: AnalysisRecord = { ...previous, ...result, created_at: new Date().toISOString() };
-  saveAnalysis(record);
+  const record: AnalysisRecord = {
+    ...previous,
+    ...result,
+    // The originally extracted text is retained as evidence of what the
+    // automated extraction actually read.
+    corrections: [
+      ...(previous.corrections ?? []),
+      { at: new Date().toISOString(), original_raw_text: previous.extracted.raw_text },
+    ],
+    created_at: new Date().toISOString(),
+  };
+  await saveAnalysis(record);
   return record;
 }
 
 /** Demo mode runs entirely locally — no external service or API key required. */
-export function runDemo(demo: DemoCase): AnalysisRecord {
+export async function runDemo(demo: DemoCase): Promise<AnalysisRecord> {
   const isUrl = demo.kind === "url";
   const base = extractFieldsFromText(demo.raw_text, isUrl ? "page_text" : "ocr");
   const extracted = {
@@ -120,7 +142,7 @@ export function runDemo(demo: DemoCase): AnalysisRecord {
     extracted,
     ...engineResult,
   };
-  saveAnalysis(record);
+  await saveAnalysis(record);
   return record;
 }
 

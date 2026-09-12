@@ -88,12 +88,12 @@ function CheckPage() {
     }
   }
 
-  function handleDemo(id: string) {
+  async function handleDemo(id: string) {
     setError(null);
     try {
       const demoCase = getDemoCases().find((d) => d.id === id);
       if (!demoCase) throw new Error("Demo case not found");
-      const record = runDemo(demoCase);
+      const record = await runDemo(demoCase);
       navigate({ to: "/analysis/$id", params: { id: record.id } });
     } catch (err) {
       setError(friendlyError(err));
@@ -225,7 +225,7 @@ function CheckPage() {
                     size="sm"
                     variant="secondary"
                     className="mt-3"
-                    onClick={() => handleDemo(d.id)}
+                    onClick={() => void handleDemo(d.id)}
                   >
                     <Play className="mr-1 size-3.5" /> Run demo
                   </Button>
