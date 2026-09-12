@@ -56,8 +56,15 @@ function AnalysisPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setRecord(getAnalysis(id));
-    setLoaded(true);
+    let active = true;
+    void getAnalysis(id).then((r) => {
+      if (!active) return;
+      setRecord(r);
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   async function handleReanalyze(text: string) {

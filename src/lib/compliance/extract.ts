@@ -1,3 +1,4 @@
+import { declarationFor, extractEntityDeclarations } from "./roles";
 import {
   bandFor,
   type ExtractedData,
