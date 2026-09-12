@@ -236,10 +236,24 @@ export interface ComplianceSummary {
   human_review_items: number;
 }
 
+/** An inspector correction to an extracted value; the original is never erased. */
+export interface FieldCorrection {
+  at: string;
+  original_raw_text: string;
+}
+
 export interface AnalysisRecord {
   id: string;
   created_at: string;
+  /** the original uploaded evidence image — never overwritten by preprocessing */
   image_data_url: string | null;
+  /** the downscaled image actually submitted for text extraction */
+  processed_image_data_url?: string | null;
+  /** prioritised findings (checks + discrepancies), highest priority first */
+  review_first?: ReviewItem[];
+  discrepancies?: Discrepancy[];
+  /** history of inspector corrections to the extracted text */
+  corrections?: FieldCorrection[];
   is_demo: boolean;
   /** defaults to "image_upload" for legacy records */
   analysis_source?: AnalysisSource;
