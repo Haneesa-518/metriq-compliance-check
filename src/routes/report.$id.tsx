@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ComplianceBadge } from "@/components/ComplianceBadge";
 import { getAnalysis } from "@/lib/analysis-store";
 import { getRule } from "@/lib/legal/rules.data";
+import { buildReviewList } from "@/lib/compliance/engine";
 import type { AnalysisRecord } from "@/lib/compliance/types";
 
 export const Route = createFileRoute("/report/$id")({
@@ -68,6 +69,8 @@ function ReportPage() {
   }
 
   const flagged = record.checks.filter((c) => c.status === "FAIL" || c.status === "REVIEW");
+  const reviewFirst =
+    record.review_first ?? buildReviewList(record.checks, record.discrepancies ?? []);
 
   async function handlePdf() {
     if (!record) return;
@@ -148,6 +151,30 @@ function ReportPage() {
         </p>
       </Section>
 
+
+      <Section title="Review first — MetriQ inspection priority">
+        {reviewFirst.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No items were flagged in this screening run.
+          </p>
+        ) : (
+          <ol className="space-y-3">
+            {reviewFirst.map((r) => (
+              <li key={`${r.kind}-${r.key}`} className="text-sm">
+                <p className="font-medium">
+                  [{r.severity}] {r.title} — {r.status}
+                </p>
+                <p className="text-muted-foreground">Why it matters: {r.reason}</p>
+                <p className="text-muted-foreground">Action: {r.action}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+        <p className="mt-3 text-xs text-muted-foreground">
+          Priority is a MetriQ operational inspection ordering. The source rules do not rank
+          declarations by severity.
+        </p>
+      </Section>
 
       <Section title="Extracted declarations">
         <table className="w-full text-sm">
