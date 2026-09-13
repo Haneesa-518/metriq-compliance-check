@@ -38,6 +38,7 @@ function ReportPage() {
   const { id } = Route.useParams();
   const [record, setRecord] = useState<AnalysisRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [exporting, setExporting] = useState<"pdf" | null>(null);
 
   useEffect(() => {
     let active = true;
