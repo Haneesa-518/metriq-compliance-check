@@ -105,6 +105,9 @@ function AnalysisPage() {
   }
 
   const uniqueRules = Array.from(new Set(record.checks.map((c) => c.rule_reference)));
+  const discrepancies = record.discrepancies ?? [];
+  // Older stored analyses predate the prioritised worklist — rebuild it on read.
+  const reviewFirst = record.review_first ?? buildReviewList(record.checks, discrepancies);
 
   return (
     <div className="min-h-screen">
@@ -156,6 +159,11 @@ function AnalysisPage() {
                   {error}
                 </p>
               )}
+            </section>
+
+            <section id="review-first" className="space-y-4 scroll-mt-20">
+              <ReviewFirstCard items={reviewFirst} checks={record.checks} />
+              <DiscrepancyCard items={discrepancies} />
             </section>
 
             <section id="product" className="scroll-mt-20">
