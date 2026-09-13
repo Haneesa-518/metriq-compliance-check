@@ -39,59 +39,122 @@ Use null when a value is not visible. Never calculate or infer a value that is n
 confidence is 0..1 and reflects how clearly you could read the value.
 Output JSON only, no markdown fences.`;
 
-export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
+const MODEL = "openai/gpt-5.6-sol";
+
+/** Single gateway call with bounded retry for transient (429 / 5xx) failures. */
+async function callGateway(body: unknown, attempt = 0): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) {
-    throw new Error("AI_KEY_MISSING");
+  if (!key) throw new Error("AI_KEY_MISSING");
+
+  let res: Response;
+  try {
+    res = await fetch(GATEWAY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("AI_TIMEOUT");
   }
 
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-5.6-sol",
-      reasoning_effort: "none",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Read this product package label and extract the fields." },
-            { type: "image_url", image_url: { url: imageDataUrl } },
-          ],
-        },
+  if (res.status === 402) throw new Error("AI_CREDITS");
+  if (res.status === 403) throw new Error("AI_BLOCKED");
+  if (res.status === 429 || res.status >= 500) {
+    if (attempt >= 2) throw new Error(res.status === 429 ? "AI_RATE_LIMIT" : `AI_ERROR_${res.status}`);
+    const retryAfter = Number(res.headers.get("retry-after") ?? 0);
+    const waitMs = retryAfter > 0 ? retryAfter * 1000 : 800 * 2 ** attempt + Math.random() * 300;
+    await new Promise((r) => setTimeout(r, waitMs));
+    return callGateway(body, attempt + 1);
+  }
+  if (!res.ok) throw new Error(`AI_ERROR_${res.status}`);
+
+  const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  return json.choices?.[0]?.message?.content ?? "";
+}
+
+function stripFences(content: string): string {
+  return content
+    .replace(/^\s*```(?:json)?/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
+}
+
+/** Pull the first balanced JSON object out of a partially prose response. */
+function extractJsonObject(content: string): string | null {
+  const start = content.indexOf("{");
+  const end = content.lastIndexOf("}");
+  if (start === -1 || end <= start) return null;
+  return content.slice(start, end + 1);
+}
+
+export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
+  const visionMessages = (instruction: string, system?: string) => [
+    ...(system ? [{ role: "system", content: system }] : []),
+    {
+      role: "user",
+      content: [
+        { type: "text", text: instruction },
+        { type: "image_url", image_url: { url: imageDataUrl } },
       ],
-    }),
+    },
+  ];
+
+  const content = await callGateway({
+    model: MODEL,
+    reasoning_effort: "none",
+    messages: visionMessages(
+      "Read this product package label and extract the fields.",
+      SYSTEM_PROMPT,
+    ),
   });
 
-  if (res.status === 429) throw new Error("AI_RATE_LIMIT");
-  if (res.status === 402) throw new Error("AI_CREDITS");
-  if (!res.ok) {
-    throw new Error(`AI_ERROR_${res.status}`);
-  }
-
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = json.choices?.[0]?.message?.content ?? "";
-  const cleaned = content.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-
-  let parsed: Partial<OcrResult>;
+  const cleaned = stripFences(content);
+  let parsed: Partial<OcrResult> | null = null;
   try {
     parsed = JSON.parse(cleaned) as Partial<OcrResult>;
   } catch {
-    // Malformed model response: fall back to using the raw text only.
-    return { raw_text: content.slice(0, 4000), fields: {}, provider: "lovable-ai-vision (unstructured)" };
+    const candidate = extractJsonObject(cleaned);
+    if (candidate) {
+      try {
+        parsed = JSON.parse(candidate) as Partial<OcrResult>;
+      } catch {
+        parsed = null;
+      }
+    }
   }
 
-  return {
-    raw_text: typeof parsed.raw_text === "string" ? parsed.raw_text : "",
-    fields: (parsed.fields ?? {}) as OcrResult["fields"],
-    provider: "lovable-ai-vision",
-  };
+  const raw_text = typeof parsed?.raw_text === "string" ? parsed.raw_text.trim() : "";
+  const fields = (parsed?.fields ?? {}) as OcrResult["fields"];
+  const hasFieldValues = Object.values(fields).some((f) => f && f.value);
+
+  if (raw_text || hasFieldValues) {
+    return { raw_text, fields, provider: parsed ? "lovable-ai-vision" : "lovable-ai-vision (recovered JSON)" };
+  }
+
+  // Structured extraction produced nothing usable. Never discard a readable
+  // image because of a malformed response — ask for a plain transcription and
+  // let the deterministic extractor work from that text.
+  if (!parsed && cleaned.length > 20) {
+    return {
+      raw_text: cleaned.slice(0, 6000),
+      fields: {},
+      provider: "lovable-ai-vision (unstructured response)",
+    };
+  }
+
+  const transcript = await callGateway({
+    model: MODEL,
+    reasoning_effort: "none",
+    messages: visionMessages(
+      "Transcribe every piece of text visible in this product label photograph, line by line, exactly as printed. Output plain text only. If no text is legible, reply with the single word NONE.",
+    ),
+  });
+
+  const text = stripFences(transcript).trim();
+  if (!text || /^none$/i.test(text)) {
+    return { raw_text: "", fields: {}, provider: "lovable-ai-vision (no text found)" };
+  }
+  return { raw_text: text.slice(0, 6000), fields: {}, provider: "lovable-ai-vision (plain transcription)" };
 }
 
 /**

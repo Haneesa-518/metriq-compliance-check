@@ -1,6 +1,12 @@
 import { Fragment, useState } from "react";
 import { AlertTriangle, Check, Minus, X } from "lucide-react";
-import type { AnalysisRecord, CheckResult, ExtractedData } from "@/lib/compliance/types";
+import type {
+  AnalysisRecord,
+  CheckResult,
+  Discrepancy,
+  ExtractedData,
+  ReviewItem,
+} from "@/lib/compliance/types";
 import { FIELD_SOURCE_LABELS, STATUS_LABELS } from "@/lib/compliance/types";
 import { ComplianceBadge, ComplianceStatus, ConfidenceIndicator } from "@/components/ComplianceBadge";
 import { getRule } from "@/lib/legal/rules.data";
@@ -470,6 +476,134 @@ export function DisclaimerNote({ className }: { className?: string }) {
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
       <span>{SCREENING_DISCLAIMER}</span>
 
+    </div>
+  );
+}
+
+const PRIORITY_TONE: Record<string, string> = {
+  CRITICAL: "border-fail/50 bg-fail/10 text-fail",
+  HIGH: "border-fail/40 bg-fail/5 text-fail",
+  MEDIUM: "border-review/40 bg-review/10 text-review",
+  LOW: "border-border bg-surface text-muted-foreground",
+};
+
+export function PriorityBadge({ priority }: { priority: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        PRIORITY_TONE[priority] ?? PRIORITY_TONE.LOW,
+      )}
+    >
+      {priority}
+    </span>
+  );
+}
+
+/**
+ * Prioritised inspector worklist. The ordering is a METRIQ operational
+ * inspection priority — the Legal Metrology (Packaged Commodities) Rules, 2011
+ * do not rank declarations, so this is never presented as a legal ranking.
+ */
+export function ReviewFirstCard({
+  items,
+  checks,
+}: {
+  items: ReviewItem[];
+  checks: CheckResult[];
+}) {
+  const byRule = new Map(checks.map((c) => [c.rule_reference, c]));
+  if (items.length === 0) {
+    return (
+      <div className="panel p-5">
+        <p className="label-caps">Review first</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Nothing was flagged in this screening run. Verify the package physically before recording a
+          final determination.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="panel p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="label-caps">Review first — {items.length} item{items.length === 1 ? "" : "s"}</p>
+        <p className="text-[11px] text-muted-foreground">
+          METRIQ inspection priority · legal severity: not explicitly ranked in source
+        </p>
+      </div>
+      <ol className="mt-4 space-y-3">
+        {items.map((item) => {
+          const check = item.kind === "check" ? byRule.get(item.key) : undefined;
+          return (
+            <li key={`${item.kind}-${item.key}`} className="rounded-md border border-border bg-surface p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <PriorityBadge priority={item.severity} />
+                <span className="text-sm font-medium">{item.title}</span>
+                <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                  {item.status === "DISCREPANCY" ? "DISCREPANCY" : STATUS_LABELS[item.status as CheckResult["status"]]}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Why it matters: </span>
+                {item.reason}
+              </p>
+              {check && (
+                <>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Detected: </span>
+                    {check.detected ?? "Not detected in submitted source"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Requirement: </span>
+                    {check.expected}
+                  </p>
+                  {check.evidence && (
+                    <p className="mt-1 break-words text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Evidence: </span>
+                      <span className="font-mono">{check.evidence}</span>
+                    </p>
+                  )}
+                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                    {check.rule_reference}
+                  </p>
+                </>
+              )}
+              <p className="mt-2 text-xs">
+                <span className="font-medium">Action: </span>
+                {item.action}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+export function DiscrepancyCard({ items }: { items: Discrepancy[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="panel p-5">
+      <p className="label-caps">Cross-source discrepancies</p>
+      <ul className="mt-3 space-y-3">
+        {items.map((d) => (
+          <li key={d.id} className="rounded-md border border-border bg-surface p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <PriorityBadge priority={d.severity} />
+              <span className="text-sm font-medium">{d.label}</span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{d.message}</p>
+            {d.evidence && (
+              <p className="mt-1 break-words font-mono text-xs text-muted-foreground">{d.evidence}</p>
+            )}
+            <p className="mt-2 text-xs">
+              <span className="font-medium">Action: </span>
+              {d.recommended_action}
+            </p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
