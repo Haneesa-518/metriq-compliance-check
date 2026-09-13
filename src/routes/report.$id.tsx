@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
+import { FileDown, FileText, Printer } from "lucide-react";
+import {
+  buildEditableReport,
+  buildPdfReport,
+  downloadBlob,
+  reportFileName,
+} from "@/lib/report/export";
 import { Button } from "@/components/ui/button";
 import { ComplianceBadge } from "@/components/ComplianceBadge";
 import { getAnalysis } from "@/lib/analysis-store";
@@ -62,6 +68,21 @@ function ReportPage() {
 
   const flagged = record.checks.filter((c) => c.status === "FAIL" || c.status === "REVIEW");
 
+  async function handlePdf() {
+    if (!record) return;
+    setExporting("pdf");
+    try {
+      downloadBlob(await buildPdfReport(record), reportFileName(record, "pdf"));
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  function handleDoc() {
+    if (!record) return;
+    downloadBlob(buildEditableReport(record), reportFileName(record, "doc"));
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <div className="no-print mb-6 flex items-center justify-between gap-3">
@@ -70,9 +91,18 @@ function ReportPage() {
             Back to analysis
           </Link>
         </Button>
-        <Button size="sm" onClick={() => window.print()}>
-          <Printer className="mr-1 size-3.5" /> Print / Save as PDF
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => void handlePdf()} disabled={exporting === "pdf"}>
+            <FileDown className="mr-1 size-3.5" />
+            {exporting === "pdf" ? "Preparing PDF…" : "Download PDF"}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={handleDoc}>
+            <FileText className="mr-1 size-3.5" /> Download editable (.doc)
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => window.print()}>
+            <Printer className="mr-1 size-3.5" /> Print
+          </Button>
+        </div>
       </div>
 
       <header className="border-b border-border pb-4">
