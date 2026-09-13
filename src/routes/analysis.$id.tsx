@@ -10,7 +10,10 @@ import {
   RecommendationCard,
   RuleReferenceCard,
   DisclaimerNote,
+  ReviewFirstCard,
+  DiscrepancyCard,
 } from "@/components/Analysis";
+import { buildReviewList } from "@/lib/compliance/engine";
 import { ImagePreview } from "@/components/Upload";
 import { Button } from "@/components/ui/button";
 import { getAnalysis } from "@/lib/analysis-store";
@@ -40,6 +43,7 @@ export const Route = createFileRoute("/analysis/$id")({
 
 const SECTIONS = [
   { id: "summary", label: "Summary" },
+  { id: "review-first", label: "Review first" },
   { id: "product", label: "Product information" },
   { id: "ocr", label: "Extracted text" },
   { id: "checks", label: "Compliance checks" },
