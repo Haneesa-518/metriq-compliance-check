@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ScanLine, FileSearch, BookText, Home } from "lucide-react";
+import { ScanLine, FileSearch, BookText, Home, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/", label: "Overview", icon: Home },
   { to: "/check", label: "Compliance Check", icon: FileSearch },
+  { to: "/history", label: "History", icon: History },
   { to: "/rules", label: "Rule Library", icon: BookText },
 ];
 
