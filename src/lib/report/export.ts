@@ -131,10 +131,21 @@ export async function buildPdfReport(record: AnalysisRecord): Promise<Blob> {
       y = M;
     }
   };
+  // The built-in PDF fonts are Latin-1 only: the rupee sign and dashes would
+  // otherwise render as wrong glyphs.
+  const ascii = (value: string) =>
+    value
+      .replace(/₹/g, "Rs. ")
+      .replace(/[–—]/g, "-")
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/·/g, "-")
+      .replace(/•/g, "-")
+      .replace(/[^\x00-\xFF]/g, "");
   const text = (value: string, size = 10, style: "normal" | "bold" = "normal", gap = 4) => {
     doc.setFont("helvetica", style);
     doc.setFontSize(size);
-    for (const line of doc.splitTextToSize(value, W) as string[]) {
+    for (const line of doc.splitTextToSize(ascii(value), W) as string[]) {
       page();
       doc.text(line, M, y);
       y += size + 2;
