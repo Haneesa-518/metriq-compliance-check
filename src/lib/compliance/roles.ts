@@ -96,9 +96,20 @@ export function extractEntityDeclarations(lines: string[]): EntityDeclaration[] 
     }
     if (!best) continue;
 
-    // Text following the marker on the same line, mapped back to the original line.
-    const tailNorm = normalized.slice((best.match.index ?? 0) + best.match[0].length).replace(/^[\s:.\-]+/, "");
-    let value = tailNorm ? lines[i].slice(-tailNorm.length).replace(/^[\s:.\-]+/, "") : "";
+    // Text following the marker on the same line. The marker is re-located in
+    // the ORIGINAL line (normalisation changes offsets), with a tolerant
+    // pattern so OCR spacing and punctuation noise still matches.
+    const loose = new RegExp(best.marker.re.source.replace(/\\s\*/g, "[\\s.]*"), "i");
+    const inOriginal = lines[i].match(loose);
+    let value = "";
+    if (inOriginal && inOriginal.index !== undefined) {
+      value = lines[i].slice(inOriginal.index + inOriginal[0].length).replace(/^[\s:.\-–—]+/, "").trim();
+    } else {
+      const tailNorm = normalized
+        .slice((best.match.index ?? 0) + best.match[0].length)
+        .replace(/^[\s:.\-]+/, "");
+      value = tailNorm ? lines[i].slice(-tailNorm.length).replace(/^[\s:.\-]+/, "").trim() : "";
+    }
     if (value.length < 3) value = "";
 
     const collected: string[] = value ? [value] : [];
