@@ -21,13 +21,13 @@ describe("role-aware entity extraction", () => {
 
   it("treats 'Marketed by' as ambiguous rather than manufacturer", () => {
     const d = extractEntityDeclarations(lines("Marketed by: Alpha Retail India Ltd"));
-    expect(declarationFor(d, "manufacturer")).toBeUndefined();
+    expect(declarationFor(d, "manufacturer")).toBeNull();
     expect(declarationFor(d, "ambiguous")?.role).toBe("ambiguous");
   });
 
   it("treats 'Distributed by' as ambiguous, never importer", () => {
     const d = extractEntityDeclarations(lines("Distributed by: Global Distributors LLP"));
-    expect(declarationFor(d, "importer")).toBeUndefined();
+    expect(declarationFor(d, "importer")).toBeNull();
     expect(declarationFor(d, "ambiguous")).toBeDefined();
   });
 
