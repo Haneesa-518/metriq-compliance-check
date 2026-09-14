@@ -31,14 +31,14 @@ export const Route = createFileRoute("/history")({
 });
 
 const RESULTS = [
-  { value: "all", label: "All results" },
+  { value: "ALL", label: "All results" },
   { value: "PASS", label: "No issues" },
   { value: "REVIEW", label: "Verification required" },
   { value: "FAIL", label: "Information not detected" },
 ] as const;
 
 const SOURCES = [
-  { value: "all", label: "All sources" },
+  { value: "ALL", label: "All sources" },
   { value: "image_upload", label: "Package image" },
   { value: "ecommerce_url", label: "Product URL" },
 ] as const;
@@ -53,8 +53,8 @@ function HistoryPage() {
   const [records, setRecords] = useState<AnalysisRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
-  const [result, setResult] = useState<(typeof RESULTS)[number]["value"]>("all");
-  const [source, setSource] = useState<(typeof SOURCES)[number]["value"]>("all");
+  const [result, setResult] = useState<(typeof RESULTS)[number]["value"]>("ALL");
+  const [source, setSource] = useState<(typeof SOURCES)[number]["value"]>("ALL");
   const [includeDemo, setIncludeDemo] = useState(false);
 
   useEffect(() => {
