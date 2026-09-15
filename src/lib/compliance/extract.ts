@@ -11,6 +11,7 @@ import {
 
 export const FIELD_LABELS: Record<string, string> = {
   product_name: "Product / commodity name",
+  brand: "Brand name",
   manufacturer: "Manufacturer",
   packer: "Packer",
   importer: "Importer",
