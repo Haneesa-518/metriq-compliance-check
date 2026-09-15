@@ -152,7 +152,7 @@ function AnalysisPage() {
 
           <main className="min-w-0 flex-1 space-y-8">
             <section id="summary" className="space-y-4 scroll-mt-20">
-              <ComplianceSummaryCard summary={record.summary} />
+              <ComplianceSummaryCard summary={record.summary} extracted={record.extracted} />
               <DisclaimerNote />
               {error && (
                 <p className="rounded-md border border-fail/40 bg-fail/10 px-3 py-2 text-sm text-fail">
