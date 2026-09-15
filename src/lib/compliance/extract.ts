@@ -11,6 +11,7 @@ import {
 
 export const FIELD_LABELS: Record<string, string> = {
   product_name: "Product / commodity name",
+  brand: "Brand name",
   manufacturer: "Manufacturer",
   packer: "Packer",
   importer: "Importer",
@@ -217,6 +218,21 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
     ) ??
     null;
   fields.product_name = field("product_name", nameLine, nameLine ? 0.72 : 0, named?.evidence ?? nameLine);
+
+  // Brand: an explicit "Brand:" declaration, otherwise a leading trade-mark
+  // style line. Never inferred from the manufacturer name.
+  const branded = lineAfter(lines, /brand(?:\s*name)?/i);
+  const brandLine =
+    branded?.value ??
+    lines.find((l) => /(?:^|\s)(?:®|™)/.test(l) && l.length <= 60)?.replace(/[®™]/g, "").trim() ??
+    null;
+  fields.brand = field(
+    "brand",
+    brandLine,
+    brandLine ? (branded?.value ? 0.8 : 0.5) : 0,
+    branded?.evidence ?? brandLine,
+  );
+
 
   // Role-aware entity extraction: the role marker decides the field, never the
   // mere presence of a company name.

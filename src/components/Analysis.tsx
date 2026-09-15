@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
+export const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
   COMPLIANT: "NO SCREENING ISSUES DETECTED",
   NON_COMPLIANT: "POTENTIAL NON-COMPLIANCE",
   NEEDS_REVIEW: "MANUAL REVIEW RECOMMENDED",
@@ -26,20 +26,34 @@ export const SCORE_DISCLAIMER =
 export const SCREENING_DISCLAIMER =
   "AI-assisted screening. Results indicate information detected or not detected. Final verification must be performed by a qualified Legal authority.";
 
-export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["summary"] }) {
-  const tone = summary.overall === "COMPLIANT" ? "text-pass" : "text-review";
+export function ComplianceSummaryCard({
+  summary,
+  extracted,
+}: {
+  summary: AnalysisRecord["summary"];
+  extracted?: ExtractedData;
+}) {
+  const brand = extracted?.fields?.brand?.value ?? null;
+  const productName = extracted?.fields?.product_name?.value ?? null;
   const stats = [
-    { label: "Pass", value: summary.passed, tone: "text-pass" },
-    { label: "Review", value: summary.review, tone: "text-review" },
-    { label: "Fail", value: summary.failed, tone: "text-fail" },
-    { label: "Not applicable", value: summary.not_applicable, tone: "text-muted-foreground" },
+    { label: "Pass", value: summary.passed, cls: "border-pass/40 bg-pass/10 text-pass" },
+    { label: "Review", value: summary.review, cls: "border-review/40 bg-review/10 text-review" },
+    { label: "Fail", value: summary.failed, cls: "border-fail/40 bg-fail/10 text-fail" },
+    {
+      label: "Not applicable",
+      value: summary.not_applicable,
+      cls: "border-border bg-muted text-muted-foreground",
+    },
   ];
   return (
     <div className="panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="label-caps">Overall screening result</p>
-          <p className={cn("mt-1 text-2xl font-semibold", tone)}>{OVERALL_LABEL[summary.overall]}</p>
+        <div className="min-w-0">
+          <p className="label-caps">{brand ? "Brand & product" : "Product"}</p>
+          <p className="mt-1 truncate text-2xl font-semibold text-foreground">
+            {productName ?? "Product name not detected"}
+          </p>
+          {brand && <p className="mt-0.5 text-sm text-muted-foreground">{brand}</p>}
         </div>
         <div className="text-right">
           <p className="label-caps">Screening coverage score</p>
@@ -53,9 +67,9 @@ export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["su
 
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label}>
-            <p className="label-caps">{s.label}</p>
-            <p className={cn("mt-1 font-mono text-xl font-semibold", s.tone)}>{s.value}</p>
+          <div key={s.label} className={cn("rounded-xl border px-3 py-2", s.cls)}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider">{s.label}</p>
+            <p className="mt-1 font-mono text-xl font-semibold">{s.value}</p>
           </div>
         ))}
       </div>
