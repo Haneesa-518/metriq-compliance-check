@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
-import { bandFor, STATUS_MEANINGS, type CheckStatus, type ConfidenceBand } from "@/lib/compliance/types";
+import {
+  bandFor,
+  STATUS_MEANINGS,
+  type CheckStatus,
+  type ConfidenceBand,
+} from "@/lib/compliance/types";
 
 const MAP: Record<CheckStatus, { text: string; icon: string; cls: string }> = {
   PASS: { text: "PASS", icon: "✓", cls: "bg-pass/15 text-pass border-pass/40" },
@@ -54,7 +59,6 @@ export function ComplianceStatus({
   );
 }
 
-
 /**
  * Extraction confidence is an internal heuristic signal (how well the value
  * matched a structured pattern) — never an OCR probability or AI accuracy.
@@ -65,7 +69,10 @@ export function ConfidenceIndicator({ value, band }: { value: number; band?: Con
   const tone = b === "HIGH" ? "bg-pass" : b === "MEDIUM" ? "bg-review" : "bg-fail";
   const text = b === "HIGH" ? "text-pass" : b === "MEDIUM" ? "text-review" : "text-fail";
   return (
-    <div className="flex items-center gap-2" title={`Internal extraction-confidence signal: ${pct}/100`}>
+    <div
+      className="flex items-center gap-2"
+      title={`Internal extraction-confidence signal: ${pct}/100`}
+    >
       <div className="h-1.5 w-12 overflow-hidden rounded-full bg-muted">
         <div className={cn("h-full rounded-full", tone)} style={{ width: `${pct}%` }} />
       </div>

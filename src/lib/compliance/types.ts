@@ -105,7 +105,6 @@ export interface PackageContext {
   attributes: Record<string, boolean>;
 }
 
-
 /** One atomic validation step inside a layered check. */
 export interface ValidationStep {
   label: string;
@@ -114,6 +113,10 @@ export interface ValidationStep {
 
 export interface CheckResult {
   status: CheckStatus;
+  check_id?: string;
+parent_rule?: string;
+sub_rule?: string;
+  
   field: string;
   label: string;
   category: "legal_metrology" | "food_labelling";
@@ -195,7 +198,6 @@ export interface ReviewItem {
   action: string;
 }
 
-
 /** Screening status labels and their plain-language meaning, shared by all UI surfaces. */
 export const STATUS_LABELS: Record<CheckStatus, string> = {
   PASS: "PASS",
@@ -210,7 +212,6 @@ export const STATUS_MEANINGS: Record<CheckStatus, string> = {
   REVIEW: "Partial / ambiguous information",
   NOT_APPLICABLE: "Rule does not apply",
 };
-
 
 export interface CategorySummary {
   passed: number;

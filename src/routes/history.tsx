@@ -21,7 +21,8 @@ export const Route = createFileRoute("/history")({
       { property: "og:title", content: "Screening History — MetriQ" },
       {
         property: "og:description",
-        content: "Search past compliance screening runs by product, manufacturer, URL or analysis ID.",
+        content:
+          "Search past compliance screening runs by product, manufacturer, URL or analysis ID.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -107,14 +108,22 @@ function HistoryPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {RESULTS.map((r) => (
-              <FilterChip key={r.value} active={result === r.value} onClick={() => setResult(r.value)}>
+              <FilterChip
+                key={r.value}
+                active={result === r.value}
+                onClick={() => setResult(r.value)}
+              >
                 {r.label}
               </FilterChip>
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
             {SOURCES.map((s) => (
-              <FilterChip key={s.value} active={source === s.value} onClick={() => setSource(s.value)}>
+              <FilterChip
+                key={s.value}
+                active={source === s.value}
+                onClick={() => setSource(s.value)}
+              >
                 {s.label}
               </FilterChip>
             ))}
@@ -157,7 +166,9 @@ function HistoryPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <ComplianceBadge
-                        status={r.summary.failed > 0 ? "FAIL" : r.summary.review > 0 ? "REVIEW" : "PASS"}
+                        status={
+                          r.summary.failed > 0 ? "FAIL" : r.summary.review > 0 ? "REVIEW" : "PASS"
+                        }
                       />
                       <div className="flex gap-1">
                         <Button asChild size="sm" variant="secondary">

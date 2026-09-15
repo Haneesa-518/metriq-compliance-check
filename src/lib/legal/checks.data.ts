@@ -122,52 +122,60 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "HIGH",
   }),
   c("LMPCR-2011-R3-002", "Rule 3", "Rule 3(a)", "Package exceeding 25 kg", {
-    requirement: "Packages of commodities exceeding 25 kg are outside the retail declaration scope, subject to the stated exception.",
+    requirement:
+      "Packages of commodities exceeding 25 kg are outside the retail declaration scope, subject to the stated exception.",
     applicability: "Packages whose declared net quantity is a weight.",
     validationType: "APPLICABILITY",
     requiredFields: ["net_quantity"],
     evaluator: "r3_over_25kg",
   }),
   c("LMPCR-2011-R3-003", "Rule 3", "Rule 3(a)", "Package exceeding 25 litres", {
-    requirement: "Packages of commodities exceeding 25 litres are outside the retail declaration scope.",
+    requirement:
+      "Packages of commodities exceeding 25 litres are outside the retail declaration scope.",
     applicability: "Packages whose declared net quantity is a volume.",
     validationType: "APPLICABILITY",
     requiredFields: ["net_quantity"],
     evaluator: "r3_over_25l",
   }),
   c("LMPCR-2011-R3-004", "Rule 3", "Rule 3(a) proviso", "Cement / fertilizer exception", {
-    requirement: "Cement, fertilizer and similar specified commodities sold in bags above 25 kg remain within scope.",
+    requirement:
+      "Cement, fertilizer and similar specified commodities sold in bags above 25 kg remain within scope.",
     applicability: "Bagged cement, fertilizer and comparable specified commodities.",
     validationType: "APPLICABILITY",
     evaluator: "r3_cement_fertilizer",
   }),
   c("LMPCR-2011-R3-005", "Rule 3", "Rule 3(b)", "Industrial consumer package", {
-    requirement: "Packaged commodities meant exclusively for industrial consumers are outside the retail declaration scope.",
+    requirement:
+      "Packaged commodities meant exclusively for industrial consumers are outside the retail declaration scope.",
     applicability: "Packages marked for industrial use only.",
     validationType: "APPLICABILITY",
     evaluator: "r3_industrial",
   }),
   c("LMPCR-2011-R3-006", "Rule 3", "Rule 3(b)", "Institutional consumer package", {
-    requirement: "Packaged commodities meant exclusively for institutional consumers are outside the retail declaration scope.",
+    requirement:
+      "Packaged commodities meant exclusively for institutional consumers are outside the retail declaration scope.",
     applicability: "Packages marked for institutional use only.",
     validationType: "APPLICABILITY",
     evaluator: "r3_institutional",
   }),
   c("LMPCR-2011-R3-007", "Rule 3", "Rule 2(k)", "Retail package classification", {
-    requirement: "A retail package is intended for sale to the ultimate consumer and attracts the full retail declarations.",
+    requirement:
+      "A retail package is intended for sale to the ultimate consumer and attracts the full retail declarations.",
     applicability: "Every submitted package.",
     validationType: "APPLICABILITY",
     evaluator: "r3_retail",
     operationalPriority: "HIGH",
   }),
   c("LMPCR-2011-R3-008", "Rule 3", "Rule 2(x)", "Wholesale package classification", {
-    requirement: "A wholesale package attracts the wholesale declarations of Rule 24, not the full retail set.",
+    requirement:
+      "A wholesale package attracts the wholesale declarations of Rule 24, not the full retail set.",
     applicability: "Every submitted package.",
     validationType: "APPLICABILITY",
     evaluator: "r3_wholesale",
   }),
   c("LMPCR-2011-R3-009", "Rule 3", "Rule 25", "Export package classification", {
-    requirement: "Packages meant for export are treated under Rule 25 rather than the domestic retail declarations.",
+    requirement:
+      "Packages meant for export are treated under Rule 25 rather than the domestic retail declarations.",
     applicability: "Every submitted package.",
     validationType: "APPLICABILITY",
     evaluator: "r3_export",
@@ -182,7 +190,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 5 — standard package sizes ---------------- */
   c("LMPCR-2011-R5-001", "Rule 5", "Rule 5", "Standard package size (Second Schedule)", {
-    requirement: "Specified commodities may only be packed in the quantities set out in the Second Schedule.",
+    requirement:
+      "Specified commodities may only be packed in the quantities set out in the Second Schedule.",
     applicability: "Commodities listed in the Second Schedule.",
     validationType: "SCHEDULE_LOOKUP",
     requiredFields: ["product_name", "net_quantity"],
@@ -192,7 +201,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     notApplicableCondition: "Commodity is not listed in the Second Schedule.",
   }),
   c("LMPCR-2011-R5-002", "Rule 5", "Rule 5", "Commodity identification for standard size", {
-    requirement: "The commodity must be identifiable well enough to select the applicable standard-size provision.",
+    requirement:
+      "The commodity must be identifiable well enough to select the applicable standard-size provision.",
     applicability: "Commodities potentially covered by the Second Schedule.",
     validationType: "SCHEDULE_LOOKUP",
     requiredFields: ["product_name"],
@@ -210,7 +220,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "HIGH",
   }),
   c("LMPCR-2011-R6-002", "Rule 6", "Rule 6(1)(a)", "Packer identity declaration", {
-    requirement: "Where the packer differs from the manufacturer, the packer's identity must be declared.",
+    requirement:
+      "Where the packer differs from the manufacturer, the packer's identity must be declared.",
     applicability: "Packages packed by an entity other than the manufacturer.",
     requiredFields: ["packer", "manufacturer"],
     evaluator: "r6_packer",
@@ -253,7 +264,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "CRITICAL",
   }),
   c("LMPCR-2011-R6-008", "Rule 6", "Rule 6(1)(f)", "Dimension declaration where applicable", {
-    requirement: "Where the commodity's dimensions are relevant to the consumer, they must be declared.",
+    requirement:
+      "Where the commodity's dimensions are relevant to the consumer, they must be declared.",
     applicability: "Commodities whose sale depends on dimensions.",
     requiredFields: ["product_name"],
     evaluator: "r6_dimensions",
@@ -280,7 +292,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "LOW",
   }),
   c("LMPCR-2011-R6-012", "Rule 6", "Rule 6(1)", "Imported-package declarations", {
-    requirement: "Imported packages must carry the importer identity and the country of origin together.",
+    requirement:
+      "Imported packages must carry the importer identity and the country of origin together.",
     applicability: "Packages classified as imported.",
     requiredFields: ["importer", "country_of_origin"],
     evaluator: "r6_imported_declarations",
@@ -294,14 +307,16 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     coveredByBaseCheck: "country_of_origin",
   }),
   c("LMPCR-2011-R6-014", "Rule 6", "Rule 6(5)", "Multi-component package declarations", {
-    requirement: "A package containing separately packed components must declare the number and quantity of each component.",
+    requirement:
+      "A package containing separately packed components must declare the number and quantity of each component.",
     applicability: "Packages presented as combination, multipack or gift packs.",
     requiredFields: ["net_quantity", "product_name"],
     evaluator: "r6_multicomponent",
     notApplicableCondition: "Package is not a multi-component package.",
   }),
   c("LMPCR-2011-R6-015", "Rule 6", "Rule 6(3)", "Sticker / revised retail sale price", {
-    requirement: "A revised price sticker may only be used in the manner permitted, and must not cover the original declaration.",
+    requirement:
+      "A revised price sticker may only be used in the manner permitted, and must not cover the original declaration.",
     applicability: "Packages showing a revised or stickered price.",
     requiredFields: ["mrp"],
     evaluator: "r6_sticker_mrp",
@@ -311,7 +326,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 7 — principal display panel ---------------- */
   c("LMPCR-2011-R7-001", "Rule 7", "Rule 7", "Principal display panel identified", {
-    requirement: "The principal display panel must be identifiable for the declarations to be assessed.",
+    requirement:
+      "The principal display panel must be identifiable for the declarations to be assessed.",
     applicability: "Image-based screening of a physical package.",
     validationType: "VISUAL_MEASUREMENT",
     evidenceRequired: "Original and processed package image.",
@@ -333,7 +349,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     automationLevel: "SEMI_AUTOMATIC",
   }),
   c("LMPCR-2011-R7-004", "Rule 7", "Rule 7", "Minimum numeral height for quantity", {
-    requirement: "The net quantity numerals must meet the prescribed minimum height for the package category.",
+    requirement:
+      "The net quantity numerals must meet the prescribed minimum height for the package category.",
     applicability: "Image-based screening where numeral geometry can be measured.",
     validationType: "VISUAL_MEASUREMENT",
     requiredFields: ["net_quantity"],
@@ -342,7 +359,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "HIGH",
   }),
   c("LMPCR-2011-R7-005", "Rule 7", "Rule 7", "Physical measurement confidence", {
-    requirement: "A height or size conclusion may only be drawn where image resolution and perspective allow reliable measurement.",
+    requirement:
+      "A height or size conclusion may only be drawn where image resolution and perspective allow reliable measurement.",
     applicability: "Image-based screening.",
     validationType: "VISUAL_MEASUREMENT",
     evaluator: "r7_measurement_confidence",
@@ -430,7 +448,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "LOW",
   }),
   c("LMPCR-2011-R9-008", "Rule 9", "Rule 9(3)", "Handwritten declarations", {
-    requirement: "Declarations must be printed as prescribed rather than handwritten, except where permitted.",
+    requirement:
+      "Declarations must be printed as prescribed rather than handwritten, except where permitted.",
     applicability: "Image-based screening of a physical package.",
     validationType: "VISUAL_MEASUREMENT",
     evaluator: "r9_handwritten",
@@ -487,7 +506,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     automationLevel: "SEMI_AUTOMATIC",
   }),
   c("LMPCR-2011-R10-008", "Rule 10", "Rule 10 proviso", "Special address cases", {
-    requirement: "Marketing-only, brand-owner and multi-unit declarations must be identified as such rather than treated as the manufacturer.",
+    requirement:
+      "Marketing-only, brand-owner and multi-unit declarations must be identified as such rather than treated as the manufacturer.",
     applicability: "Packages whose only entity declaration is a marketing or distribution role.",
     requiredFields: ["manufacturer"],
     evaluator: "r10_special_address",
@@ -510,21 +530,30 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     operationalPriority: "HIGH",
   }),
   c("LMPCR-2011-R11-003", "Rule 11", "Rule 11", "Quantity representation format", {
-    requirement: "The quantity must be represented in the prescribed form, without misleading qualifiers.",
+    requirement:
+      "The quantity must be represented in the prescribed form, without misleading qualifiers.",
     applicability: "Packages declaring a net quantity.",
     requiredFields: ["net_quantity"],
     evaluator: "r11_representation",
   }),
-  c("LMPCR-2011-R11-004", "Rule 11", "Rule 11 read with the Third Schedule", "\"When packed\" condition", {
-    requirement: "Commodities covered by the Third Schedule must declare quantity on the prescribed basis.",
-    applicability: "Commodities listed in the Third Schedule.",
-    validationType: "SCHEDULE_LOOKUP",
-    requiredFields: ["product_name", "net_quantity"],
-    evaluator: "r11_when_packed",
-    notApplicableCondition: "Commodity is not listed in the Third Schedule.",
-  }),
+  c(
+    "LMPCR-2011-R11-004",
+    "Rule 11",
+    "Rule 11 read with the Third Schedule",
+    '"When packed" condition',
+    {
+      requirement:
+        "Commodities covered by the Third Schedule must declare quantity on the prescribed basis.",
+      applicability: "Commodities listed in the Third Schedule.",
+      validationType: "SCHEDULE_LOOKUP",
+      requiredFields: ["product_name", "net_quantity"],
+      evaluator: "r11_when_packed",
+      notApplicableCondition: "Commodity is not listed in the Third Schedule.",
+    },
+  ),
   c("LMPCR-2011-R11-005", "Rule 11", "Rule 11", "Commodity-specific quantity requirement", {
-    requirement: "Additional quantity information required for the specific commodity must be declared.",
+    requirement:
+      "Additional quantity information required for the specific commodity must be declared.",
     applicability: "Commodities with an additional Fourth Schedule requirement.",
     validationType: "SCHEDULE_LOOKUP",
     requiredFields: ["product_name", "net_quantity"],
@@ -540,17 +569,24 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
   }),
 
   /* ---------------- Rule 12 — quantity type ---------------- */
-  c("LMPCR-2011-R12-001", "Rule 12", "Rule 12 read with the Fourth Schedule", "Correct quantity type for the commodity", {
-    requirement: "The commodity must be declared by the quantity type prescribed for it.",
-    applicability: "Commodities listed in the Fourth Schedule.",
-    validationType: "SCHEDULE_LOOKUP",
-    requiredFields: ["product_name", "net_quantity"],
-    evaluator: "r12_quantity_type",
-    operationalPriority: "HIGH",
-    notApplicableCondition: "Commodity is not listed in the Fourth Schedule.",
-  }),
+  c(
+    "LMPCR-2011-R12-001",
+    "Rule 12",
+    "Rule 12 read with the Fourth Schedule",
+    "Correct quantity type for the commodity",
+    {
+      requirement: "The commodity must be declared by the quantity type prescribed for it.",
+      applicability: "Commodities listed in the Fourth Schedule.",
+      validationType: "SCHEDULE_LOOKUP",
+      requiredFields: ["product_name", "net_quantity"],
+      evaluator: "r12_quantity_type",
+      operationalPriority: "HIGH",
+      notApplicableCondition: "Commodity is not listed in the Fourth Schedule.",
+    },
+  ),
   c("LMPCR-2011-R12-002", "Rule 12", "Rule 12", "Additional quantity representation", {
-    requirement: "Where an additional representation is required for the commodity, it must also be declared.",
+    requirement:
+      "Where an additional representation is required for the commodity, it must also be declared.",
     applicability: "Commodities with an additional Fourth Schedule requirement.",
     validationType: "SCHEDULE_LOOKUP",
     requiredFields: ["net_quantity"],
@@ -620,7 +656,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 15 — quantity with dimension or weight ---------------- */
   c("LMPCR-2011-R15-001", "Rule 15", "Rule 15", "Quantity accompanied by required measurement", {
-    requirement: "For specified commodities the quantity must be accompanied by dimensions or weight.",
+    requirement:
+      "For specified commodities the quantity must be accompanied by dimensions or weight.",
     applicability: "Commodities for which a combined declaration is prescribed.",
     validationType: "SCHEDULE_LOOKUP",
     requiredFields: ["product_name", "net_quantity"],
@@ -646,7 +683,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 17 — containers ---------------- */
   c("LMPCR-2011-R17-001", "Rule 17", "Rule 17", "Container classification", {
-    requirement: "Container-type commodities must be classified to select the applicable declarations.",
+    requirement:
+      "Container-type commodities must be classified to select the applicable declarations.",
     applicability: "Bags, boxes and comparable containers sold as commodities.",
     requiredFields: ["product_name"],
     evaluator: "r17_classification",
@@ -678,8 +716,10 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     notApplicableCondition: "Submitted source is not a listing or dealer display.",
   }),
   c("LMPCR-2011-R18-002", "Rule 18", "Rule 18", "Displayed price not above retail sale price", {
-    requirement: "The price at which the commodity is offered must not exceed the declared retail sale price.",
-    applicability: "Listings or displays showing both a selling price and the declared retail sale price.",
+    requirement:
+      "The price at which the commodity is offered must not exceed the declared retail sale price.",
+    applicability:
+      "Listings or displays showing both a selling price and the declared retail sale price.",
     validationType: "CROSS_SOURCE",
     requiredFields: ["mrp"],
     evaluator: "r18_price_above_mrp",
@@ -687,7 +727,8 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     notApplicableCondition: "Only one price is available, so no comparison is possible.",
   }),
   c("LMPCR-2011-R18-003", "Rule 18", "Rule 6(10)", "Required online declarations", {
-    requirement: "An e-commerce listing must display the prescribed subset of package declarations.",
+    requirement:
+      "An e-commerce listing must display the prescribed subset of package declarations.",
     applicability: "E-commerce listings.",
     validationType: "CROSS_SOURCE",
     evaluator: "r18_online_declarations",
@@ -705,34 +746,45 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 19 / 22 — physical quantity verification ---------------- */
   c("LMPCR-2011-R19-001", "Rule 19", "Rule 19", "Physical quantity verification", {
-    requirement: "Actual net quantity must be determined by measurement against the declared quantity.",
+    requirement:
+      "Actual net quantity must be determined by measurement against the declared quantity.",
     applicability: "Physical inspection mode only.",
     validationType: "PHYSICAL_INSPECTION",
-    evidenceRequired: "Measured quantity, tare, sample size and lot size recorded by the inspector.",
+    evidenceRequired:
+      "Measured quantity, tare, sample size and lot size recorded by the inspector.",
     evaluator: "r19_physical_inspection",
     automationLevel: "PHYSICAL_INSPECTION",
     notApplicableCondition: "No physical inspection data was supplied with this analysis.",
     operationalPriority: "HIGH",
   }),
-  c("LMPCR-2011-R22-001", "Rule 22", "Rule 22 read with the First Schedule", "Maximum permissible error", {
-    requirement: "Any deficiency in net quantity must not exceed the maximum permissible error for the declared quantity.",
-    applicability: "Physical inspection mode only; cannot be determined from a label image.",
-    validationType: "PHYSICAL_INSPECTION",
-    requiredFields: ["net_quantity"],
-    evidenceRequired: "Declared quantity and measured quantity.",
-    evaluator: "r22_mpe",
-    automationLevel: "PHYSICAL_INSPECTION",
-    operationalPriority: "HIGH",
-  }),
+  c(
+    "LMPCR-2011-R22-001",
+    "Rule 22",
+    "Rule 22 read with the First Schedule",
+    "Maximum permissible error",
+    {
+      requirement:
+        "Any deficiency in net quantity must not exceed the maximum permissible error for the declared quantity.",
+      applicability: "Physical inspection mode only; cannot be determined from a label image.",
+      validationType: "PHYSICAL_INSPECTION",
+      requiredFields: ["net_quantity"],
+      evidenceRequired: "Declared quantity and measured quantity.",
+      evaluator: "r22_mpe",
+      automationLevel: "PHYSICAL_INSPECTION",
+      operationalPriority: "HIGH",
+    },
+  ),
 
   /* ---------------- Rule 23 — deceptive packaging ---------------- */
   c("LMPCR-2011-R23-001", "Rule 23", "Rule 23", "Potential deceptive packaging", {
-    requirement: "A package must not be designed to mislead as to the quantity of the commodity it contains.",
+    requirement:
+      "A package must not be designed to mislead as to the quantity of the commodity it contains.",
     applicability: "Image-based screening of a physical package.",
     validationType: "HUMAN_REVIEW",
     evaluator: "r23_deceptive",
     automationLevel: "HUMAN_REVIEW",
-    failCondition: "Never determined automatically — this check can only return REVIEW or NOT APPLICABLE.",
+    failCondition:
+      "Never determined automatically — this check can only return REVIEW or NOT APPLICABLE.",
   }),
 
   /* ---------------- Rule 24 — wholesale packages ---------------- */
@@ -750,31 +802,45 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     evaluator: "r24_quantity",
     notApplicableCondition: "Package is not classified as a wholesale package.",
   }),
-  c("LMPCR-2011-R24-003", "Rule 24", "Rule 24", "Wholesale manufacturer / packer / importer identity", {
-    requirement: "A wholesale package must declare the identity of the manufacturer, packer or importer.",
-    applicability: "Wholesale packages.",
-    requiredFields: ["manufacturer", "packer", "importer"],
-    evaluator: "r24_identity",
-    notApplicableCondition: "Package is not classified as a wholesale package.",
-  }),
+  c(
+    "LMPCR-2011-R24-003",
+    "Rule 24",
+    "Rule 24",
+    "Wholesale manufacturer / packer / importer identity",
+    {
+      requirement:
+        "A wholesale package must declare the identity of the manufacturer, packer or importer.",
+      applicability: "Wholesale packages.",
+      requiredFields: ["manufacturer", "packer", "importer"],
+      evaluator: "r24_identity",
+      notApplicableCondition: "Package is not classified as a wholesale package.",
+    },
+  ),
   c("LMPCR-2011-R24-004", "Rule 24", "Rule 24", "Number of retail units in the wholesale package", {
     requirement: "A wholesale package must declare the number of retail packages it contains.",
     applicability: "Wholesale packages containing retail packages.",
     evaluator: "r24_retail_units",
     notApplicableCondition: "Package is not classified as a wholesale package.",
   }),
-  c("LMPCR-2011-R24-005", "Rule 24", "Rule 24", "Retail declarations not forced on wholesale packages", {
-    requirement: "Retail-only declarations must not be required of a wholesale package.",
-    applicability: "Wholesale packages.",
-    validationType: "APPLICABILITY",
-    evaluator: "r24_retail_exclusion",
-    notApplicableCondition: "Package is not classified as a wholesale package.",
-    operationalPriority: "LOW",
-  }),
+  c(
+    "LMPCR-2011-R24-005",
+    "Rule 24",
+    "Rule 24",
+    "Retail declarations not forced on wholesale packages",
+    {
+      requirement: "Retail-only declarations must not be required of a wholesale package.",
+      applicability: "Wholesale packages.",
+      validationType: "APPLICABILITY",
+      evaluator: "r24_retail_exclusion",
+      notApplicableCondition: "Package is not classified as a wholesale package.",
+      operationalPriority: "LOW",
+    },
+  ),
 
   /* ---------------- Rule 25 — export packages ---------------- */
   c("LMPCR-2011-R25-001", "Rule 25", "Rule 25", "Export package treatment", {
-    requirement: "Packages meant for export are exempt from the domestic retail declarations to the extent prescribed.",
+    requirement:
+      "Packages meant for export are exempt from the domestic retail declarations to the extent prescribed.",
     applicability: "Packages marked for export.",
     validationType: "APPLICABILITY",
     evaluator: "r25_export",
@@ -783,23 +849,32 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 26 — exemptions ---------------- */
   c("LMPCR-2011-R26-001", "Rule 26", "Rule 26(a)", "Package up to 10 g or 10 ml", {
-    requirement: "Packages containing a commodity of 10 g or 10 ml or less are exempt from specified declarations.",
+    requirement:
+      "Packages containing a commodity of 10 g or 10 ml or less are exempt from specified declarations.",
     applicability: "Very small packages, other than tobacco products.",
     validationType: "EXEMPTION",
     requiredFields: ["net_quantity"],
     evaluator: "r26_small_10",
     notApplicableCondition: "Declared quantity exceeds the exemption threshold.",
   }),
-  c("LMPCR-2011-R26-002", "Rule 26", "Rule 26", "Package above 10 g / 10 ml and up to 20 g / 20 ml", {
-    requirement: "Packages in the 10–20 g or 10–20 ml band attract reduced declaration requirements as prescribed.",
-    applicability: "Small packages within the stated band.",
-    validationType: "EXEMPTION",
-    requiredFields: ["net_quantity"],
-    evaluator: "r26_small_20",
-    notApplicableCondition: "Declared quantity is outside the band.",
-  }),
+  c(
+    "LMPCR-2011-R26-002",
+    "Rule 26",
+    "Rule 26",
+    "Package above 10 g / 10 ml and up to 20 g / 20 ml",
+    {
+      requirement:
+        "Packages in the 10–20 g or 10–20 ml band attract reduced declaration requirements as prescribed.",
+      applicability: "Small packages within the stated band.",
+      validationType: "EXEMPTION",
+      requiredFields: ["net_quantity"],
+      evaluator: "r26_small_20",
+      notApplicableCondition: "Declared quantity is outside the band.",
+    },
+  ),
   c("LMPCR-2011-R26-003", "Rule 26", "Rule 26", "Fast-food package exemption", {
-    requirement: "Fast food items packed by a restaurant or hotel are exempt from the specified declarations.",
+    requirement:
+      "Fast food items packed by a restaurant or hotel are exempt from the specified declarations.",
     applicability: "Fast food packed by a restaurant or hotel.",
     validationType: "EXEMPTION",
     evaluator: "r26_fast_food",
@@ -813,14 +888,16 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     notApplicableCondition: "Package is not a drug package.",
   }),
   c("LMPCR-2011-R26-005", "Rule 26", "Rule 26", "Agricultural produce exemption", {
-    requirement: "Specified agricultural farm produce packages are exempt to the extent prescribed.",
+    requirement:
+      "Specified agricultural farm produce packages are exempt to the extent prescribed.",
     applicability: "Agricultural farm produce packages above the prescribed size.",
     validationType: "EXEMPTION",
     evaluator: "r26_agricultural",
     notApplicableCondition: "Package is not agricultural farm produce.",
   }),
   c("LMPCR-2011-R26-006", "Rule 26", "Rule 26", "Other specifically exempted commodities", {
-    requirement: "Other commodities and categories specifically exempted are excluded from the stated declarations only.",
+    requirement:
+      "Other commodities and categories specifically exempted are excluded from the stated declarations only.",
     applicability: "Commodities named in the exemption provision.",
     validationType: "EXEMPTION",
     evaluator: "r26_other",
@@ -829,15 +906,22 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
   }),
 
   /* ---------------- Rules 27–30 — administrative requirements ---------------- */
-  c("LMPCR-2011-R27-001", "Rule 27", "Rule 27", "Registration of manufacturer, packer or importer", {
-    requirement: "Manufacturers, packers and importers must be registered with the appropriate authority.",
-    applicability: "External record check — not determinable from a package image.",
-    validationType: "EXTERNAL_RECORD_CHECK",
-    evidenceRequired: "Registration certificate or authority record.",
-    evaluator: "external_record",
-    automationLevel: "EXTERNAL_RECORD_CHECK",
-    operationalPriority: "HIGH",
-  }),
+  c(
+    "LMPCR-2011-R27-001",
+    "Rule 27",
+    "Rule 27",
+    "Registration of manufacturer, packer or importer",
+    {
+      requirement:
+        "Manufacturers, packers and importers must be registered with the appropriate authority.",
+      applicability: "External record check — not determinable from a package image.",
+      validationType: "EXTERNAL_RECORD_CHECK",
+      evidenceRequired: "Registration certificate or authority record.",
+      evaluator: "external_record",
+      automationLevel: "EXTERNAL_RECORD_CHECK",
+      operationalPriority: "HIGH",
+    },
+  ),
   c("LMPCR-2011-R28-001", "Rule 28", "Rule 28", "Records and documents maintained", {
     requirement: "Prescribed records and documents must be maintained.",
     applicability: "Document check — not determinable from a package image.",
@@ -866,14 +950,16 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
 
   /* ---------------- Rule 31 — advertisements ---------------- */
   c("LMPCR-2011-R31-001", "Rule 31", "Rule 31", "Retail selling price in advertisement", {
-    requirement: "An advertisement mentioning the retail sale price attracts the advertisement declarations.",
+    requirement:
+      "An advertisement mentioning the retail sale price attracts the advertisement declarations.",
     applicability: "Sources that are advertisements or listings mentioning a selling price.",
     validationType: "CROSS_SOURCE",
     evaluator: "r31_price_mentioned",
     notApplicableCondition: "No retail selling price is mentioned in an advertisement context.",
   }),
   c("LMPCR-2011-R31-002", "Rule 31", "Rule 31", "Quantity or number accompanying the price", {
-    requirement: "Where the price is advertised, the net quantity or number must be declared with it.",
+    requirement:
+      "Where the price is advertised, the net quantity or number must be declared with it.",
     applicability: "Advertisements mentioning a retail selling price.",
     validationType: "CROSS_SOURCE",
     requiredFields: ["net_quantity"],
@@ -881,14 +967,21 @@ export const ATOMIC_CHECKS: AtomicCheck[] = [
     notApplicableCondition: "No retail selling price is mentioned in an advertisement context.",
     operationalPriority: "HIGH",
   }),
-  c("LMPCR-2011-R31-003", "Rule 31", "Rule 31", "Font-size relationship between price and quantity", {
-    requirement: "The quantity declaration must be displayed in the prescribed size relationship to the price.",
-    applicability: "Advertisements where the visual sizes can be measured.",
-    validationType: "VISUAL_MEASUREMENT",
-    evaluator: "r31_font_relationship",
-    automationLevel: "SEMI_AUTOMATIC",
-    notApplicableCondition: "No retail selling price is mentioned in an advertisement context.",
-  }),
+  c(
+    "LMPCR-2011-R31-003",
+    "Rule 31",
+    "Rule 31",
+    "Font-size relationship between price and quantity",
+    {
+      requirement:
+        "The quantity declaration must be displayed in the prescribed size relationship to the price.",
+      applicability: "Advertisements where the visual sizes can be measured.",
+      validationType: "VISUAL_MEASUREMENT",
+      evaluator: "r31_font_relationship",
+      automationLevel: "SEMI_AUTOMATIC",
+      notApplicableCondition: "No retail selling price is mentioned in an advertisement context.",
+    },
+  ),
 ];
 
 /* ------------------------------------------------------------------ */
@@ -907,13 +1000,55 @@ export interface LegalConsequence {
  * determination — it shows which provision an inspector would consult next.
  */
 export const LEGAL_CONSEQUENCES: LegalConsequence[] = [
-  { parentRule: "Rule 6", consequence: "Contravention of the declaration requirements is dealt with under the penalty provisions of the parent Act and Rule 32.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 5", consequence: "Packing in a non-standard size is dealt with under the penalty provisions referenced by Rule 32.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 18", consequence: "Sale above the declared retail sale price is dealt with under the parent Act's price provisions.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 22", consequence: "Quantity deficiency beyond the maximum permissible error is dealt with under the parent Act's short-measure provisions.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 24", consequence: "Wholesale declaration contraventions are dealt with under the penalty provisions referenced by Rule 32.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 27", consequence: "Operating without registration is dealt with under the registration provisions of the parent Act.", sourceReference: "Rule 32", status: "needs_verification" },
-  { parentRule: "Rule 31", consequence: "Advertisement contraventions are dealt with under the penalty provisions referenced by Rule 32.", sourceReference: "Rule 32", status: "needs_verification" },
+  {
+    parentRule: "Rule 6",
+    consequence:
+      "Contravention of the declaration requirements is dealt with under the penalty provisions of the parent Act and Rule 32.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 5",
+    consequence:
+      "Packing in a non-standard size is dealt with under the penalty provisions referenced by Rule 32.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 18",
+    consequence:
+      "Sale above the declared retail sale price is dealt with under the parent Act's price provisions.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 22",
+    consequence:
+      "Quantity deficiency beyond the maximum permissible error is dealt with under the parent Act's short-measure provisions.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 24",
+    consequence:
+      "Wholesale declaration contraventions are dealt with under the penalty provisions referenced by Rule 32.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 27",
+    consequence:
+      "Operating without registration is dealt with under the registration provisions of the parent Act.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
+  {
+    parentRule: "Rule 31",
+    consequence:
+      "Advertisement contraventions are dealt with under the penalty provisions referenced by Rule 32.",
+    sourceReference: "Rule 32",
+    status: "needs_verification",
+  },
 ];
 
 export function consequenceFor(parentRule: string): LegalConsequence | null {

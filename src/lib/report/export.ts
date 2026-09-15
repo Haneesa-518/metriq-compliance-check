@@ -18,13 +18,17 @@ function overallLabel(record: AnalysisRecord) {
 }
 
 function sourceLine(record: AnalysisRecord) {
-  if (record.analysis_source === "ecommerce_url") return `E-commerce listing — ${record.source_url ?? "URL not recorded"}`;
+  if (record.analysis_source === "ecommerce_url")
+    return `E-commerce listing — ${record.source_url ?? "URL not recorded"}`;
   if (record.is_demo) return "Demo mode — synthetic sample data";
   return "Uploaded product package image";
 }
 
 function escapeHtml(value: string) {
-  return value.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  return value.replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!,
+  );
 }
 
 function flagged(record: AnalysisRecord): CheckResult[] {
@@ -40,7 +44,10 @@ export function buildEditableReport(record: AnalysisRecord): Blob {
   const review = record.review_first ?? buildReviewList(record.checks, record.discrepancies ?? []);
   const rows = (cells: string[][]) =>
     cells
-      .map((r) => `<tr>${r.map((c) => `<td style="border:1px solid #ccc;padding:4px">${c}</td>`).join("")}</tr>`)
+      .map(
+        (r) =>
+          `<tr>${r.map((c) => `<td style="border:1px solid #ccc;padding:4px">${c}</td>`).join("")}</tr>`,
+      )
       .join("");
 
   const html = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>MetriQ Compliance Report ${escapeHtml(record.id)}</title></head>
@@ -61,7 +68,13 @@ ${
   review.length === 0
     ? "<p>No items flagged.</p>"
     : `<table style="border-collapse:collapse;width:100%">${rows([
-        ["<b>Priority</b>", "<b>Issue</b>", "<b>Result</b>", "<b>Why it matters</b>", "<b>Action</b>"],
+        [
+          "<b>Priority</b>",
+          "<b>Issue</b>",
+          "<b>Result</b>",
+          "<b>Why it matters</b>",
+          "<b>Action</b>",
+        ],
         ...review.map((r) => [
           r.severity,
           escapeHtml(r.title),
@@ -74,7 +87,12 @@ ${
 
 <h2>Extracted declarations</h2>
 <table style="border-collapse:collapse;width:100%">${rows([
-    ["<b>Declaration</b>", "<b>Detected value</b>", "<b>Extraction confidence</b>", "<b>Source</b>"],
+    [
+      "<b>Declaration</b>",
+      "<b>Detected value</b>",
+      "<b>Extraction confidence</b>",
+      "<b>Source</b>",
+    ],
     ...Object.values(record.extracted.fields).map((f) => [
       escapeHtml(f.label),
       escapeHtml(f.value ?? "Not detected"),
@@ -97,7 +115,10 @@ ${
 ${
   (record.discrepancies ?? []).length > 0
     ? `<h2>Cross-source discrepancies</h2><ul>${(record.discrepancies ?? [])
-        .map((d) => `<li><b>${escapeHtml(d.label)}</b> (${d.severity}) — ${escapeHtml(d.message)}</li>`)
+        .map(
+          (d) =>
+            `<li><b>${escapeHtml(d.label)}</b> (${d.severity}) — ${escapeHtml(d.message)}</li>`,
+        )
         .join("")}</ul>`
     : ""
 }
@@ -141,7 +162,9 @@ export async function buildPdfReport(record: AnalysisRecord): Promise<Blob> {
       .replace(/[‘’]/g, "'")
       .replace(/·/g, "-")
       .replace(/•/g, "-")
-      .replace(/[^\x00-\xFF]/g, "");
+      .split("")
+      .filter((char) => char.charCodeAt(0) <= 0xff)
+      .join("");
   const text = (value: string, size = 10, style: "normal" | "bold" = "normal", gap = 4) => {
     doc.setFont("helvetica", style);
     doc.setFontSize(size);
@@ -236,7 +259,13 @@ export async function buildPdfReport(record: AnalysisRecord): Promise<Blob> {
 
   for (const ruleId of Array.from(new Set(record.checks.map((c) => c.rule_reference)))) {
     const rule = getRule(ruleId);
-    if (rule) text(`${ruleId} — ${rule.title} · ${rule.source_document}, ${rule.source_reference}`, 7, "normal", 0);
+    if (rule)
+      text(
+        `${ruleId} — ${rule.title} · ${rule.source_document}, ${rule.source_reference}`,
+        7,
+        "normal",
+        0,
+      );
   }
 
   return doc.output("blob");

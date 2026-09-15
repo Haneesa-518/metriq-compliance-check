@@ -34,7 +34,10 @@ export const analyzeImage = createServerFn({ method: "POST" })
     const baseline = extractFieldsFromText(ocr.raw_text);
     const extracted = mergeExtraction(baseline, ocr.fields);
     const result = runRuleEngine(extracted);
-    return { extracted: { ...extracted, engine: `${ocr.provider} + rule-based extractor` }, ...result };
+    return {
+      extracted: { ...extracted, engine: `${ocr.provider} + rule-based extractor` },
+      ...result,
+    };
   });
 
 export const analyzeUrl = createServerFn({ method: "POST" })
@@ -52,7 +55,11 @@ export const analyzeText = createServerFn({ method: "POST" })
       data.user_corrected ? "user_corrected" : "ocr",
     );
     const withContext = data.listing
-      ? { ...extracted, analysis_source: "ecommerce_url" as const, analysis_context: "ecommerce_listing" as const }
+      ? {
+          ...extracted,
+          analysis_source: "ecommerce_url" as const,
+          analysis_context: "ecommerce_listing" as const,
+        }
       : extracted;
     const result = runRuleEngine(withContext);
     return { extracted: withContext, ...result };

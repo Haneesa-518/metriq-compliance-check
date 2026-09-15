@@ -8,7 +8,11 @@ import type {
   ReviewItem,
 } from "@/lib/compliance/types";
 import { FIELD_SOURCE_LABELS, STATUS_LABELS } from "@/lib/compliance/types";
-import { ComplianceBadge, ComplianceStatus, ConfidenceIndicator } from "@/components/ComplianceBadge";
+import {
+  ComplianceBadge,
+  ComplianceStatus,
+  ConfidenceIndicator,
+} from "@/components/ComplianceBadge";
 import { getRule } from "@/lib/legal/rules.data";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,11 +21,10 @@ import { cn } from "@/lib/utils";
 export const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
   COMPLIANT: "NO SCREENING ISSUES DETECTED",
   NON_COMPLIANT: "POTENTIAL NON-COMPLIANCE",
-  NEEDS_REVIEW: "MANUAL REVIEW RECOMMENDED",
+  NEEDS_REVIEW: "ATTENTION REQUIRED",
 };
 
-export const SCORE_DISCLAIMER =
-  "Automated screening coverage.";
+export const SCORE_DISCLAIMER = "Automated screening coverage.";
 
 export const SCREENING_DISCLAIMER =
   "AI-assisted screening. Results indicate information detected or not detected. Final verification must be performed by a qualified Legal authority.";
@@ -48,13 +51,20 @@ export function ComplianceSummaryCard({
   return (
     <div className="panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="label-caps">{brand ? "Brand & product" : "Product"}</p>
-          <p className="mt-1 truncate text-2xl font-semibold text-foreground">
-            {productName ?? "Product name not detected"}
-          </p>
-          {brand && <p className="mt-0.5 text-sm text-muted-foreground">{brand}</p>}
-        </div>
+<div className="min-w-0">
+  <p className="label-caps">Analysis and Result</p>
+<p
+  className={cn(
+    "mt-1 truncate text-2xl font-semibold",
+    summary.overall === "COMPLIANT" && "text-pass",
+    summary.overall === "NON_COMPLIANT" && "text-fail",
+    summary.overall === "NEEDS_REVIEW" && "text-review",
+  )}
+>
+  {OVERALL_LABEL[summary.overall]}
+</p>
+  {brand && <p className="mt-0.5 text-sm text-muted-foreground">{brand}</p>}
+</div>
         <div className="text-right">
           <p className="label-caps">Screening coverage score</p>
           <p className="mt-1 font-mono text-2xl font-semibold text-primary">{summary.score}%</p>
@@ -63,7 +73,6 @@ export function ComplianceSummaryCard({
           </p>
         </div>
       </div>
-
 
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((s) => (
@@ -92,7 +101,6 @@ export function ComplianceSummaryCard({
         {SCORE_DISCLAIMER}
       </p>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{SCREENING_DISCLAIMER}</p>
-
     </div>
   );
 }
@@ -211,8 +219,9 @@ export function OCRTextPanel({
         aria-label="Extracted text"
       />
       <p className="mt-2 text-xs text-muted-foreground">
-        Correct any misread text, then re-run the deterministic extraction and rule evaluation on the
-        corrected text. AI assists extraction; final compliance decisions require human verification.
+        Correct any misread text, then re-run the deterministic extraction and rule evaluation on
+        the corrected text. AI assists extraction; final compliance decisions require human
+        verification.
       </p>
     </div>
   );
@@ -220,22 +229,58 @@ export function OCRTextPanel({
 
 const CATEGORY_TITLES = {
   legal_metrology: "Legal Metrology checks",
-  food_labelling: "Food labelling screening — prototype scope",
+  food_labelling: "Food specific checks",
 } as const;
 
 export function ComplianceTable({ checks }: { checks: CheckResult[] }) {
-  const groups = (["legal_metrology", "food_labelling"] as const)
-    .map((cat) => ({ cat, items: checks.filter((c) => c.category === cat) }))
-    .filter((g) => g.items.length > 0);
+  const categories = (["legal_metrology", "food_labelling"] as const)
+    .map((cat) => {
+      const categoryChecks = checks.filter((c) => c.category === cat);
+
+      const ruleGroups = Object.entries(
+        categoryChecks.reduce<Record<string, CheckResult[]>>(
+          (groups, check) => {
+            const rule = check.parent_rule ?? check.rule_group ?? "Other";
+            (groups[rule] ??= []).push(check);
+            return groups;
+          },
+          {},
+        ),
+      );
+
+      return {
+        cat,
+        ruleGroups,
+      };
+    })
+    .filter((g) => g.ruleGroups.length > 0);
+
   return (
-    <div className="space-y-5">
-      {groups.map((g) => (
-        <div key={g.cat}>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {CATEGORY_TITLES[g.cat]}
+    <div className="space-y-8">
+      {categories.map((category) => (
+        <section key={category.cat}>
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {CATEGORY_TITLES[category.cat]}
           </h3>
-          <CheckGroupTable checks={g.items} />
-        </div>
+
+          <div className="space-y-6">
+            {category.ruleGroups.map(([rule, ruleChecks]) => (
+              <div key={rule}>
+                <div className="mb-3 flex items-center gap-3">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {rule}
+                  </h4>
+
+                  <span className="text-xs text-muted-foreground">
+                    {ruleChecks.length} checks
+                  </span>
+                </div>
+
+                <CheckGroupTable checks={ruleChecks} />
+              </div>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
@@ -489,7 +534,6 @@ export function DisclaimerNote({ className }: { className?: string }) {
     >
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
       <span>{SCREENING_DISCLAIMER}</span>
-
     </div>
   );
 }
@@ -519,21 +563,15 @@ export function PriorityBadge({ priority }: { priority: string }) {
  * inspection priority — the Legal Metrology (Packaged Commodities) Rules, 2011
  * do not rank declarations, so this is never presented as a legal ranking.
  */
-export function ReviewFirstCard({
-  items,
-  checks,
-}: {
-  items: ReviewItem[];
-  checks: CheckResult[];
-}) {
+export function ReviewFirstCard({ items, checks }: { items: ReviewItem[]; checks: CheckResult[] }) {
   const byRule = new Map(checks.map((c) => [c.rule_reference, c]));
   if (items.length === 0) {
     return (
       <div className="panel p-5">
         <p className="label-caps">Review first</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Nothing was flagged in this screening run. Verify the package physically before recording a
-          final determination.
+          Nothing was flagged in this screening run. Verify the package physically before recording
+          a final determination.
         </p>
       </div>
     );
@@ -541,7 +579,9 @@ export function ReviewFirstCard({
   return (
     <div className="panel p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="label-caps">Review first — {items.length} item{items.length === 1 ? "" : "s"}</p>
+        <p className="label-caps">
+          Review first — {items.length} item{items.length === 1 ? "" : "s"}
+        </p>
         <p className="text-[11px] text-muted-foreground">
           METRIQ inspection priority · legal severity: not explicitly ranked in source
         </p>
@@ -550,12 +590,17 @@ export function ReviewFirstCard({
         {items.map((item) => {
           const check = item.kind === "check" ? byRule.get(item.key) : undefined;
           return (
-            <li key={`${item.kind}-${item.key}`} className="rounded-md border border-border bg-surface p-3">
+            <li
+              key={`${item.kind}-${item.key}`}
+              className="rounded-md border border-border bg-surface p-3"
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <PriorityBadge priority={item.severity} />
                 <span className="text-sm font-medium">{item.title}</span>
                 <span className="ml-auto font-mono text-[11px] text-muted-foreground">
-                  {item.status === "DISCREPANCY" ? "DISCREPANCY" : STATUS_LABELS[item.status as CheckResult["status"]]}
+                  {item.status === "DISCREPANCY"
+                    ? "DISCREPANCY"
+                    : STATUS_LABELS[item.status as CheckResult["status"]]}
                 </span>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -609,7 +654,9 @@ export function DiscrepancyCard({ items }: { items: Discrepancy[] }) {
             </div>
             <p className="mt-2 text-xs text-muted-foreground">{d.message}</p>
             {d.evidence && (
-              <p className="mt-1 break-words font-mono text-xs text-muted-foreground">{d.evidence}</p>
+              <p className="mt-1 break-words font-mono text-xs text-muted-foreground">
+                {d.evidence}
+              </p>
             )}
             <p className="mt-2 text-xs">
               <span className="font-medium">Action: </span>

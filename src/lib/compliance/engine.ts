@@ -1,3 +1,4 @@
+import { runAtomicEngine } from "./atomic-engine";
 import {
   LEGAL_RULES,
   LEGAL_SEVERITY_NOTE,
@@ -753,16 +754,35 @@ export function buildReviewList(checks: CheckResult[], discrepancies: Discrepanc
 
 /** Deterministic rule engine entry point. */
 export function runRuleEngine(data: ExtractedData) {
-  const pkg: PackageContext = data.context ?? detectContext(data.raw_text || "", data.fields);
-  const ctx: Ctx = { data, pkg, listing: data.analysis_context === "ecommerce_listing" };
+  const pkg: PackageContext =
+    data.context ??
+    detectContext(data.raw_text || "", data.fields);
+
+  const ctx: Ctx = {
+    data,
+    pkg,
+    listing:
+      data.analysis_context === "ecommerce_listing",
+  };
+
   const checks = CHECKS.map((fn) => fn(ctx));
+
   const discrepancies = detectDiscrepancies(data);
+
   return {
     checks,
     discrepancies,
-    review_first: buildReviewList(checks, discrepancies),
-    summary: summarize(checks),
-    recommendations: buildRecommendations(checks),
+    review_first:
+      buildReviewList(
+        checks,
+        discrepancies,
+      ),
+    summary:
+      summarize(checks),
+    recommendations:
+      buildRecommendations(
+        checks,
+      ),
   };
 }
 

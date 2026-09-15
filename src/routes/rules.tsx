@@ -16,7 +16,8 @@ export const Route = createFileRoute("/rules")({
       { property: "og:title", content: "Rule Library — MetriQ Compliance Checker" },
       {
         property: "og:description",
-        content: "Structured rule records with applicability, source reference and verification status.",
+        content:
+          "Structured rule records with applicability, source reference and verification status.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -38,11 +39,11 @@ function RulesPage() {
       <main className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6">
         <h1 className="text-xl font-semibold">Rule library</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          The legal knowledge layer is stored as structured data, separate from both the AI extraction
-          layer and the UI. Rules reference the Legal Metrology (Packaged Commodities) Rules, 2011
-          (Department of Consumer Affairs) and, for food products, the Food Safety and Standards
-          labelling regulations (FSSAI) at rule-number level. No legislative
-          wording is quoted, and every record below is marked{" "}
+          The legal knowledge layer is stored as structured data, separate from both the AI
+          extraction layer and the UI. Rules reference the Legal Metrology (Packaged Commodities)
+          Rules, 2011 (Department of Consumer Affairs) and, for food products, the Food Safety and
+          Standards labelling regulations (FSSAI) at rule-number level. No legislative wording is
+          quoted, and every record below is marked{" "}
           <span className="font-mono">needs_verification</span> until confirmed against the official
           published document.
         </p>

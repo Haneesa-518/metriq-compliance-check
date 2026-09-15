@@ -33,12 +33,14 @@ export function friendlyError(err: unknown): string {
     return "That URL is not supported. Enter a public https:// product listing URL.";
   if (msg.includes("URL_BLOCKED"))
     return "This product page blocks automated access. Try uploading a screenshot of the listing or the package instead.";
-  if (msg.includes("URL_NOT_FOUND")) return "That product page could not be found. Check the URL and try again.";
+  if (msg.includes("URL_NOT_FOUND"))
+    return "That product page could not be found. Check the URL and try again.";
   if (msg.includes("URL_RATE_LIMITED"))
     return "The product site is rate-limiting requests right now. Please try again shortly.";
   if (msg.includes("URL_TIMEOUT"))
     return "The product page took too long to respond. Try again, or upload a screenshot instead.";
-  if (msg.includes("URL_NOT_HTML")) return "That link is not a product page. Paste the product listing URL.";
+  if (msg.includes("URL_NOT_HTML"))
+    return "That link is not a product page. Paste the product listing URL.";
   if (msg.includes("URL_FETCH_FAILED"))
     return "We couldn't access this product page. Try uploading a screenshot instead.";
   if (msg.includes("PAGE_INSUFFICIENT"))

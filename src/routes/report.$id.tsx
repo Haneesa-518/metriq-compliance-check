@@ -129,7 +129,9 @@ function ReportPage() {
           </div>
           <div>
             <dt className="label-caps">Source</dt>
-            <dd>{record.is_demo ? "Demo mode — synthetic sample data" : record.extracted.engine}</dd>
+            <dd>
+              {record.is_demo ? "Demo mode — synthetic sample data" : record.extracted.engine}
+            </dd>
           </div>
         </dl>
       </header>
@@ -150,7 +152,6 @@ function ReportPage() {
           applicable). Automated screening coverage — not a legal compliance determination.
         </p>
       </Section>
-
 
       <Section title="Review first — MetriQ inspection priority">
         {reviewFirst.length === 0 ? (
@@ -210,7 +211,9 @@ function ReportPage() {
 
       <Section title="Items requiring verification">
         {flagged.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No items were flagged in this prototype run.</p>
+          <p className="text-sm text-muted-foreground">
+            No items were flagged in this prototype run.
+          </p>
         ) : (
           <ul className="space-y-3">
             {flagged.map((c) => (
@@ -235,7 +238,6 @@ function ReportPage() {
           </ul>
         )}
       </Section>
-
 
       <Section title="Rule references">
         <ul className="space-y-2 text-sm">
@@ -264,8 +266,8 @@ function ReportPage() {
           MetriQ is a hackathon prototype offering compliance assistance only. It is not legal
           advice, is not affiliated with or certified by any government body, and its output is not
           legally binding. Rule records are marked as requiring verification against the official
-          published documents. A score of 100% does not guarantee legal compliance. All findings must
-          be verified by a qualified authority or professional.
+          published documents. A score of 100% does not guarantee legal compliance. All findings
+          must be verified by a qualified authority or professional.
         </p>
       </Section>
     </main>

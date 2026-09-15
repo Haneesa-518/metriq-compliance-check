@@ -59,16 +59,16 @@ function field(
     value: clean,
     confidence: conf,
     band: bandFor(conf),
-    evidence: clean ? (evidence?.trim() || null) : null,
+    evidence: clean ? evidence?.trim() || null : null,
     source: clean ? source : "unavailable",
   };
 }
 
 const NET_QTY_RE =
-  /(?:net\s*(?:qty|quantity|wt|weight|vol|volume)\s*[:.\-]?\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|gm|gms|grams?|mg|l|ltr|litres?|liters?|ml|n|no\.?s?|pieces?|pcs)\b/i;
+  /(?:net\s*(?:qty|quantity|wt|weight|vol|volume)\s*[:.-]?\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|gm|gms|grams?|mg|l|ltr|litres?|liters?|ml|n|no\.?s?|pieces?|pcs)\b/i;
 const NET_QTY_LABEL_RE = /net\s*(?:qty|quantity|wt|weight|vol|volume)/i;
 const MRP_RE =
-  /(?:m\.?r\.?p\.?|maximum\s+retail\s+price|retail\s+sale\s+price|price)\s*[:.\-]?\s*(?:rs\.?|inr|₹)?\s*(\d+(?:[.,]\d{1,2})?)/i;
+  /(?:m\.?r\.?p\.?|maximum\s+retail\s+price|retail\s+sale\s+price|price)\s*[:.-]?\s*(?:rs\.?|inr|₹)?\s*(\d+(?:[.,]\d{1,2})?)/i;
 const MRP_WORDING_RE = /m\.?r\.?p\.?|maximum\s+retail\s+price|retail\s+sale\s+price/i;
 const UNIT_PRICE_RE =
   /(?:unit\s*sale\s*price|price\s*per\s*unit|unit\s*price)?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:[.,]\d{1,2})?)\s*(?:\/|per\s*)\s*(kg|g|gm|l|ltr|litre|liter|ml|unit|pc|pcs|piece|n)\b/i;
@@ -100,13 +100,16 @@ function lineAfter(lines: string[], re: RegExp): { value: string; evidence: stri
   return null;
 }
 
-const DOMESTIC_ORIGIN_RE = /country\s*of\s*origin\s*[:\-]?\s*india\b/i;
+const DOMESTIC_ORIGIN_RE = /country\s*of\s*origin\s*[:-]?\s*india\b/i;
 const IMPORT_RE = /imported\s+by|importer\b|country\s*of\s*origin/i;
 const NON_FOOD_HINT_RE =
   /shampoo|soap|detergent|cosmetic|cream|lotion|cement|paint|battery|cable|electronic|garment|textile|shoe|footwear|stationery|toy\b/i;
 
 /** Deterministic package-context detection (drives rule applicability only). */
-export function detectContext(rawText: string, fields: Record<string, ExtractedField>): PackageContext {
+export function detectContext(
+  rawText: string,
+  fields: Record<string, ExtractedField>,
+): PackageContext {
   const text = rawText || "";
 
   // ---- import classification (three-state; absence of evidence ≠ imported) ----
@@ -189,7 +192,6 @@ export function detectContext(rawText: string, fields: Record<string, ExtractedF
   };
 }
 
-
 /**
  * Deterministic, explainable field extraction from raw OCR text.
  * Used on its own for "re-analyze after editing OCR text", and as a fallback /
@@ -217,14 +219,22 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
         !/mfg|manufactur|packed|import|customer|consumer|care|address|email|www/i.test(l),
     ) ??
     null;
-  fields.product_name = field("product_name", nameLine, nameLine ? 0.72 : 0, named?.evidence ?? nameLine);
+  fields.product_name = field(
+    "product_name",
+    nameLine,
+    nameLine ? 0.72 : 0,
+    named?.evidence ?? nameLine,
+  );
 
   // Brand: an explicit "Brand:" declaration, otherwise a leading trade-mark
   // style line. Never inferred from the manufacturer name.
   const branded = lineAfter(lines, /brand(?:\s*name)?/i);
   const brandLine =
     branded?.value ??
-    lines.find((l) => /(?:^|\s)(?:®|™)/.test(l) && l.length <= 60)?.replace(/[®™]/g, "").trim() ??
+    lines
+      .find((l) => /(?:^|\s)(?:®|™)/.test(l) && l.length <= 60)
+      ?.replace(/[®™]/g, "")
+      .trim() ??
     null;
   fields.brand = field(
     "brand",
@@ -232,7 +242,6 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
     brandLine ? (branded?.value ? 0.8 : 0.5) : 0,
     branded?.evidence ?? brandLine,
   );
-
 
   // Role-aware entity extraction: the role marker decides the field, never the
   // mere presence of a company name.
@@ -248,7 +257,12 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
     manufacturer?.confidence ?? 0,
     manufacturer?.evidence ?? null,
   );
-  fields.packer = field("packer", packer?.name ?? null, packer?.confidence ?? 0, packer?.evidence ?? null);
+  fields.packer = field(
+    "packer",
+    packer?.name ?? null,
+    packer?.confidence ?? 0,
+    packer?.evidence ?? null,
+  );
   fields.importer = field(
     "importer",
     importer?.name ?? null,
@@ -292,7 +306,9 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
 
   // Unit sale price is only accepted from a line that actually expresses a
   // "per unit" price — never derived or calculated from the MRP.
-  const unitLine = lines.find((l) => UNIT_PRICE_LABEL_RE.test(l) || /\bper\s*(kg|g|l|ltr|litre|ml|unit|pc|piece)\b/i.test(l));
+  const unitLine = lines.find(
+    (l) => UNIT_PRICE_LABEL_RE.test(l) || /\bper\s*(kg|g|l|ltr|litre|ml|unit|pc|piece)\b/i.test(l),
+  );
   const unitMatch = unitLine?.match(UNIT_PRICE_RE) ?? null;
   fields.unit_sale_price = field(
     "unit_sale_price",
@@ -313,11 +329,20 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
   );
 
   const origin = lineAfter(lines, /country\s*of\s*origin/i);
-  fields.country_of_origin = field("country_of_origin", origin?.value ?? null, 0.82, origin?.evidence);
+  fields.country_of_origin = field(
+    "country_of_origin",
+    origin?.value ?? null,
+    0.82,
+    origin?.evidence,
+  );
 
   const dateMatch =
-    text.match(/(?:mfg|manufactur\w*|packed|pkd|date)[^\n]*?((?:0?[1-9]|1[0-2])\s*[/\-.]\s*(?:20)?\d{2})/i) ??
-    text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*'?\s*(?:20)?\d{2}\b/i);
+    text.match(
+      /(?:mfg|manufactur\w*|packed|pkd|date)[^\n]*?((?:0?[1-9]|1[0-2])\s*[/\-.]\s*(?:20)?\d{2})/i,
+    ) ??
+    text.match(
+      /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*'?\s*(?:20)?\d{2}\b/i,
+    );
   const dateValue = dateMatch ? (dateMatch[1] ?? dateMatch[0]) : null;
   fields.date_of_manufacture = field(
     "date_of_manufacture",
@@ -355,7 +380,7 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
   const bestBefore = lineAfter(lines, BEST_BEFORE_RE);
   fields.best_before = field(
     "best_before",
-    bestBefore?.value ?? (lineWith(lines, BEST_BEFORE_RE) ?? null),
+    bestBefore?.value ?? lineWith(lines, BEST_BEFORE_RE) ?? null,
     bestBefore ? 0.82 : 0.5,
     bestBefore?.evidence ?? lineWith(lines, BEST_BEFORE_RE),
   );
@@ -373,7 +398,9 @@ export function extractFieldsFromText(rawText: string, source: FieldSource = "oc
     fields,
     ocr_confidence,
     engine:
-      source === "user_corrected" ? "rule-based extractor (user-corrected text)" : "rule-based extractor",
+      source === "user_corrected"
+        ? "rule-based extractor (user-corrected text)"
+        : "rule-based extractor",
     context: detectContext(text, fields),
   };
 }
@@ -409,7 +436,15 @@ export function textQuality(text: string, detectedFields: number): number {
 export function mergeExtraction(
   base: ExtractedData,
   aiFields:
-    | Record<string, { value?: string | null; confidence?: number; evidence?: string | null; source?: FieldSource }>
+    | Record<
+        string,
+        {
+          value?: string | null;
+          confidence?: number;
+          evidence?: string | null;
+          source?: FieldSource;
+        }
+      >
     | undefined,
   defaultSource: FieldSource = "ocr",
   engineLabel = "AI vision OCR + rule-based extractor",
@@ -419,7 +454,8 @@ export function mergeExtraction(
   for (const key of FIELD_KEYS) {
     const ai = aiFields[key];
     const aiValue = ai?.value?.toString().trim();
-    const aiConf = typeof ai?.confidence === "number" ? Math.max(0, Math.min(1, ai.confidence)) : 0.6;
+    const aiConf =
+      typeof ai?.confidence === "number" ? Math.max(0, Math.min(1, ai.confidence)) : 0.6;
     const current = fields[key];
     if (aiValue && aiValue.toLowerCase() !== "not detected" && aiValue !== "null") {
       if (!current.value || aiConf >= current.confidence) {
@@ -428,7 +464,8 @@ export function mergeExtraction(
           value: aiValue,
           confidence: aiConf,
           band: bandFor(aiConf),
-          evidence: ai?.evidence?.trim() || current.evidence || findEvidence(base.raw_text, aiValue),
+          evidence:
+            ai?.evidence?.trim() || current.evidence || findEvidence(base.raw_text, aiValue),
           source: ai?.source ?? defaultSource,
         };
       }

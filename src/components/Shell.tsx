@@ -68,9 +68,7 @@ export function Footer() {
   return (
     <footer className="mt-16 border-t border-border py-8">
       <div className="mx-auto max-w-[1600px] space-y-2 px-4 text-xs text-muted-foreground sm:px-6">
-        <p className="font-semibold text-foreground">
-          MetriQ — compliance-assistance prototype
-        </p>
+        <p className="font-semibold text-foreground">MetriQ — compliance-assistance prototype</p>
         <p className="max-w-3xl leading-relaxed">
           This is a hackathon prototype. It does not provide legal advice, is not affiliated with or
           certified by any government body, and its output is not legally binding. Rule entries are

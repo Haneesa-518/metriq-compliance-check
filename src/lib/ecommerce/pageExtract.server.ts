@@ -97,7 +97,9 @@ function collectJsonLdProduct(nodes: Record<string, unknown>[]) {
     description ??= str(node.description);
     const brand = node.brand;
     const brandName =
-      typeof brand === "object" && brand ? str((brand as Record<string, unknown>).name) : str(brand);
+      typeof brand === "object" && brand
+        ? str((brand as Record<string, unknown>).name)
+        : str(brand);
     if (brandName) specs["Brand"] = brandName;
     const mfr = node.manufacturer;
     const mfrName =
@@ -106,7 +108,10 @@ function collectJsonLdProduct(nodes: Record<string, unknown>[]) {
     const weight = node.weight;
     const weightValue =
       typeof weight === "object" && weight
-        ? [str((weight as Record<string, unknown>).value), str((weight as Record<string, unknown>).unitText)]
+        ? [
+            str((weight as Record<string, unknown>).value),
+            str((weight as Record<string, unknown>).unitText),
+          ]
             .filter(Boolean)
             .join(" ")
         : str(weight);
@@ -116,7 +121,8 @@ function collectJsonLdProduct(nodes: Record<string, unknown>[]) {
     if (offer && typeof offer === "object") {
       const price = str((offer as Record<string, unknown>).price);
       const currency = str((offer as Record<string, unknown>).priceCurrency);
-      if (price) specs["Price"] = `${currency === "INR" ? "₹ " : `${currency ?? ""} `}${price}`.trim();
+      if (price)
+        specs["Price"] = `${currency === "INR" ? "₹ " : `${currency ?? ""} `}${price}`.trim();
     }
     const image = node.image;
     for (const i of Array.isArray(image) ? image : [image]) {
@@ -136,7 +142,13 @@ function readSpecTables(html: string): Record<string, string> {
     const cells = Array.from(row[1].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)).map((c) =>
       clean(decodeEntities(c[1].replace(/<[^>]+>/g, " "))),
     );
-    if (cells.length >= 2 && cells[0] && cells[1] && cells[0].length <= 60 && cells[1].length <= 300) {
+    if (
+      cells.length >= 2 &&
+      cells[0] &&
+      cells[1] &&
+      cells[0].length <= 60 &&
+      cells[1].length <= 300
+    ) {
       specs[cells[0].replace(/:$/, "")] = cells[1];
     }
   }
@@ -228,7 +240,10 @@ export function extractProductPageData(url: string, html: string): ProductPageDa
 /** Is there enough product information on the page to be worth analysing? */
 export function hasUsefulProductInfo(page: ProductPageData): boolean {
   const specCount = Object.keys(page.specifications).length;
-  return Boolean(page.title) && (page.visibleText.length > 200 || specCount >= 3 || Boolean(page.description));
+  return (
+    Boolean(page.title) &&
+    (page.visibleText.length > 200 || specCount >= 3 || Boolean(page.description))
+  );
 }
 
 /**

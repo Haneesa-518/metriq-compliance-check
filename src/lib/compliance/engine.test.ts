@@ -61,9 +61,7 @@ describe("rule engine — positive cases", () => {
   });
 
   it("validates consumer care from contact patterns", () => {
-    const { checks } = engineFor(
-      "SAMPLE\nConsumer care: care@sample.example / 1800 123 4567",
-    );
+    const { checks } = engineFor("SAMPLE\nConsumer care: care@sample.example / 1800 123 4567");
     expect(find(checks, "consumer_care").status).toBe("PASS");
   });
 

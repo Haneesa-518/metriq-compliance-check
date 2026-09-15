@@ -2,12 +2,24 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AlertCircle, Link2, Play } from "lucide-react";
 import { Navbar, Footer } from "@/components/Shell";
-import { UploadZone, ImagePreview, AnalysisProgress, PROGRESS_STEPS, URL_PROGRESS_STEPS } from "@/components/Upload";
+import {
+  UploadZone,
+  ImagePreview,
+  AnalysisProgress,
+  PROGRESS_STEPS,
+  URL_PROGRESS_STEPS,
+} from "@/components/Upload";
 import { DisclaimerNote } from "@/components/Analysis";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { analyzeProduct, analyzeProductUrl, friendlyError, getDemoCases, runDemo } from "@/services/api";
+import {
+  analyzeProduct,
+  analyzeProductUrl,
+  friendlyError,
+  getDemoCases,
+  runDemo,
+} from "@/services/api";
 
 export const Route = createFileRoute("/check")({
   validateSearch: (search: Record<string, unknown>): { demo?: boolean } =>
@@ -185,14 +197,14 @@ function CheckPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Enter a publicly accessible product listing URL. MetriQ analyzes the information
-                  available on the product page and uses available product images when possible. Pages
-                  that require sign-in or block automated access cannot be analyzed — upload a
+                  available on the product page and uses available product images when possible.
+                  Pages that require sign-in or block automated access cannot be analyzed — upload a
                   screenshot instead.
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  An online listing is not required to display every physical-package declaration, so
-                  declarations that only appear on the pack are flagged for human verification rather
-                  than treated as failures.
+                  An online listing is not required to display every physical-package declaration,
+                  so declarations that only appear on the pack are flagged for human verification
+                  rather than treated as failures.
                 </p>
               </div>
             </TabsContent>

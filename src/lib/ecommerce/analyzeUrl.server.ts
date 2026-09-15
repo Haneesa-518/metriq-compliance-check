@@ -92,7 +92,12 @@ export async function analyzeProductUrlPipeline(inputUrl: string): Promise<UrlAn
         },
       ]),
     );
-    extracted = mergeExtraction(extracted, mapped, "ai", "AI-assisted listing extraction + rule-based extractor");
+    extracted = mergeExtraction(
+      extracted,
+      mapped,
+      "ai",
+      "AI-assisted listing extraction + rule-based extractor",
+    );
     if (Object.keys(mapped).length) sources.push("AI-assisted extraction");
   } catch {
     /* fall back to the deterministic extractor only */

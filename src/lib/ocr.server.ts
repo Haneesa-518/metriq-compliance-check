@@ -60,7 +60,8 @@ async function callGateway(body: unknown, attempt = 0): Promise<string> {
   if (res.status === 402) throw new Error("AI_CREDITS");
   if (res.status === 403) throw new Error("AI_BLOCKED");
   if (res.status === 429 || res.status >= 500) {
-    if (attempt >= 2) throw new Error(res.status === 429 ? "AI_RATE_LIMIT" : `AI_ERROR_${res.status}`);
+    if (attempt >= 2)
+      throw new Error(res.status === 429 ? "AI_RATE_LIMIT" : `AI_ERROR_${res.status}`);
     const retryAfter = Number(res.headers.get("retry-after") ?? 0);
     const waitMs = retryAfter > 0 ? retryAfter * 1000 : 800 * 2 ** attempt + Math.random() * 300;
     await new Promise((r) => setTimeout(r, waitMs));
@@ -128,7 +129,11 @@ export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
   const hasFieldValues = Object.values(fields).some((f) => f && f.value);
 
   if (raw_text || hasFieldValues) {
-    return { raw_text, fields, provider: parsed ? "lovable-ai-vision" : "lovable-ai-vision (recovered JSON)" };
+    return {
+      raw_text,
+      fields,
+      provider: parsed ? "lovable-ai-vision" : "lovable-ai-vision (recovered JSON)",
+    };
   }
 
   // Structured extraction produced nothing usable. Never discard a readable
@@ -154,7 +159,11 @@ export async function runOcr(imageDataUrl: string): Promise<OcrResult> {
   if (!text || /^none$/i.test(text)) {
     return { raw_text: "", fields: {}, provider: "lovable-ai-vision (no text found)" };
   }
-  return { raw_text: text.slice(0, 6000), fields: {}, provider: "lovable-ai-vision (plain transcription)" };
+  return {
+    raw_text: text.slice(0, 6000),
+    fields: {},
+    provider: "lovable-ai-vision (plain transcription)",
+  };
 }
 
 /**
@@ -176,7 +185,10 @@ field_key is one of: product_name, manufacturer, packer, importer, address, net_
 confidence is 0..1. Output JSON only, no markdown fences.`;
 
 export interface PageFieldExtraction {
-  fields: Record<string, { value: string | null; confidence: number; evidence?: string | null; source?: string }>;
+  fields: Record<
+    string,
+    { value: string | null; confidence: number; evidence?: string | null; source?: string }
+  >;
   provider: string;
 }
 
@@ -206,7 +218,10 @@ export async function runPageFieldExtraction(pageText: string): Promise<PageFiel
 
   const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
   const content = json.choices?.[0]?.message?.content ?? "";
-  const cleaned = content.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const cleaned = content
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   try {
     const parsed = JSON.parse(cleaned) as Partial<PageFieldExtraction>;
     return { fields: parsed.fields ?? {}, provider: "lovable-ai-text" };

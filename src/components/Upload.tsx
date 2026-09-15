@@ -116,7 +116,11 @@ export function ImagePreview({
           </button>
         )}
       </div>
-      <img src={src} alt="Uploaded product package label" className="max-h-[420px] w-full object-contain bg-background" />
+      <img
+        src={src}
+        alt="Uploaded product package label"
+        className="max-h-[420px] w-full object-contain bg-background"
+      />
     </div>
   );
 }
@@ -137,7 +141,13 @@ export const URL_PROGRESS_STEPS = [
   "Preparing report",
 ];
 
-export function AnalysisProgress({ step, steps = PROGRESS_STEPS }: { step: number; steps?: string[] }) {
+export function AnalysisProgress({
+  step,
+  steps = PROGRESS_STEPS,
+}: {
+  step: number;
+  steps?: string[];
+}) {
   return (
     <ol className="panel space-y-3 p-5">
       {steps.map((label, i) => {

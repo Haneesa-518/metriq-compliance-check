@@ -20,12 +20,12 @@ inconsistent.
 
 Four strictly separated layers:
 
-| Layer | Responsibility | Where |
-| --- | --- | --- |
-| AI extraction | Read text from the image, propose candidate field values + confidence | `src/lib/ocr.server.ts` |
-| Legal knowledge | Structured rule records (requirement, applicability, source, status) | `src/lib/legal/rules.data.ts` |
-| Deterministic validation | `check_*` functions returning PASS / FAIL / REVIEW / NOT_APPLICABLE | `src/lib/compliance/engine.ts` |
-| UI presentation | Upload flow, dashboard, report | `src/routes`, `src/components` |
+| Layer                    | Responsibility                                                        | Where                          |
+| ------------------------ | --------------------------------------------------------------------- | ------------------------------ |
+| AI extraction            | Read text from the image, propose candidate field values + confidence | `src/lib/ocr.server.ts`        |
+| Legal knowledge          | Structured rule records (requirement, applicability, source, status)  | `src/lib/legal/rules.data.ts`  |
+| Deterministic validation | `check_*` functions returning PASS / FAIL / REVIEW / NOT_APPLICABLE   | `src/lib/compliance/engine.ts` |
+| UI presentation          | Upload flow, dashboard, report                                        | `src/routes`, `src/components` |
 
 **The language model never decides compliance.** It only assists with extraction. Every status is
 produced by plain, testable code.
@@ -114,7 +114,7 @@ Open **Compliance Check → Demo mode** and run any of the three synthetic cases
 
 1. Complete declarations
 2. Missing declarations (consumer care / date absent)
-3. Poor-quality scan → returns *Needs Manual Review*
+3. Poor-quality scan → returns _Needs Manual Review_
 
 Demo mode runs fully offline — no API key or external service required. All demo text is fictional
 and labelled as synthetic sample data.
@@ -133,7 +133,7 @@ and labelled as synthetic sample data.
   "source_document": "Legal Metrology (Packaged Commodities) Rules, 2011 — Department of Consumer Affairs, GoI",
   "source_reference": "Rule 6 read with Rule 8",
   "status": "needs_verification",
-  "last_verified": null
+  "last_verified": null,
 }
 ```
 

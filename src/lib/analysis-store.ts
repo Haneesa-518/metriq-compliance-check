@@ -37,7 +37,10 @@ function idb(): Promise<IDBDatabase | null> {
   });
 }
 
-function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T | null> {
+function tx<T>(
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest<T>,
+): Promise<T | null> {
   return idb().then(
     (db) =>
       new Promise<T | null>((resolve) => {
@@ -62,12 +65,18 @@ export async function saveAnalysis(record: AnalysisRecord): Promise<void> {
 }
 
 export async function getAnalysis(id: string): Promise<AnalysisRecord | null> {
-  const stored = await tx<AnalysisRecord>("readonly", (store) => store.get(id) as IDBRequest<AnalysisRecord>);
+  const stored = await tx<AnalysisRecord>(
+    "readonly",
+    (store) => store.get(id) as IDBRequest<AnalysisRecord>,
+  );
   return stored ?? memory.get(id) ?? null;
 }
 
 export async function listAnalyses(): Promise<AnalysisRecord[]> {
-  const all = await tx<AnalysisRecord[]>("readonly", (store) => store.getAll() as IDBRequest<AnalysisRecord[]>);
+  const all = await tx<AnalysisRecord[]>(
+    "readonly",
+    (store) => store.getAll() as IDBRequest<AnalysisRecord[]>,
+  );
   const records = all && all.length ? all : Array.from(memory.values());
   return [...records].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
@@ -102,7 +111,10 @@ function haystack(r: AnalysisRecord): string {
 }
 
 /** Search and filter the persisted repository (Analysis ID, product, brand, maker, URL). */
-export function filterAnalyses(records: AnalysisRecord[], filters: HistoryFilters): AnalysisRecord[] {
+export function filterAnalyses(
+  records: AnalysisRecord[],
+  filters: HistoryFilters,
+): AnalysisRecord[] {
   const q = (filters.query ?? "").trim().toLowerCase();
   return records.filter((r) => {
     if (!filters.includeDemo && r.is_demo) return false;
@@ -121,10 +133,15 @@ export function filterAnalyses(records: AnalysisRecord[], filters: HistoryFilter
 }
 
 /** All historical scans of the same product name, newest first (compliance history). */
-export function scansOfSameProduct(records: AnalysisRecord[], record: AnalysisRecord): AnalysisRecord[] {
+export function scansOfSameProduct(
+  records: AnalysisRecord[],
+  record: AnalysisRecord,
+): AnalysisRecord[] {
   const name = (record.extracted.fields.product_name?.value ?? "").trim().toLowerCase();
   if (!name) return [];
   return records.filter(
-    (r) => r.id !== record.id && (r.extracted.fields.product_name?.value ?? "").trim().toLowerCase() === name,
+    (r) =>
+      r.id !== record.id &&
+      (r.extracted.fields.product_name?.value ?? "").trim().toLowerCase() === name,
   );
 }

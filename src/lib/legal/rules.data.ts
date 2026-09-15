@@ -583,7 +583,8 @@ export const FIELD_PRIORITY: Record<string, PriorityMeta> = {
   },
   consumer_care: {
     priority: "MEDIUM",
-    reason: "Consumer complaint contact details support redress but are not price or quantity related.",
+    reason:
+      "Consumer complaint contact details support redress but are not price or quantity related.",
     group: "Consumer redress",
   },
   product_name: {

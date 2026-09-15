@@ -104,7 +104,11 @@ export async function fetchImageAsDataUrl(imageUrl: string): Promise<string | nu
     for (let i = 0; i < bytes.length; i += 8192) {
       binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
     }
-    const mime = type.includes("png") ? "image/png" : type.includes("webp") ? "image/webp" : "image/jpeg";
+    const mime = type.includes("png")
+      ? "image/png"
+      : type.includes("webp")
+        ? "image/webp"
+        : "image/jpeg";
     return `data:${mime};base64,${btoa(binary)}`;
   } catch {
     return null;

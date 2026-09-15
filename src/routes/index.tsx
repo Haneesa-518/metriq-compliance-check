@@ -28,10 +28,26 @@ export const Route = createFileRoute("/")({
 });
 
 const PIPELINE = [
-  { icon: ScanLine, title: "AI extraction", text: "Vision OCR reads the label and proposes candidate declarations with confidence scores." },
-  { icon: Layers, title: "Legal knowledge layer", text: "Structured rule records with applicability, source document and verification status." },
-  { icon: ShieldCheck, title: "Deterministic rule engine", text: "Plain validation functions decide PASS / FAIL / REVIEW — never the language model." },
-  { icon: FileText, title: "Report", text: "Explained findings, rule references, recommendations and a printable report." },
+  {
+    icon: ScanLine,
+    title: "AI extraction",
+    text: "Vision OCR reads the label and proposes candidate declarations with confidence scores.",
+  },
+  {
+    icon: Layers,
+    title: "Legal knowledge layer",
+    text: "Structured rule records with applicability, source document and verification status.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Deterministic rule engine",
+    text: "Plain validation functions decide PASS / FAIL / REVIEW — never the language model.",
+  },
+  {
+    icon: FileText,
+    title: "Report",
+    text: "Explained findings, rule references, recommendations and a printable report.",
+  },
 ];
 
 function Landing() {
@@ -74,8 +90,8 @@ function Landing() {
         <section className="mx-auto max-w-[1600px] px-4 py-16 sm:px-6">
           <h2 className="text-lg font-semibold">How the pipeline is separated</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            AI assists with extraction. Compliance decisions are made by deterministic code against a
-            structured rule dataset. A human makes the final call.
+            AI assists with extraction. Compliance decisions are made by deterministic code against
+            a structured rule dataset. A human makes the final call.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {PIPELINE.map((p) => (

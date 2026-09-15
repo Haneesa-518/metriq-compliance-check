@@ -31,7 +31,11 @@ interface Marker {
  * "M f d . b y" or "Manufactured  &  Packed  By" still resolves.
  */
 const MARKERS: Marker[] = [
-  { re: /manufactured\s*(?:and|&)?\s*packed\s*(?:and|&)?\s*marketed\s*by/, role: "manufacturer", confidence: 0.9 },
+  {
+    re: /manufactured\s*(?:and|&)?\s*packed\s*(?:and|&)?\s*marketed\s*by/,
+    role: "manufacturer",
+    confidence: 0.9,
+  },
   { re: /manufactured\s*(?:and|&)\s*marketed\s*by/, role: "manufacturer", confidence: 0.88 },
   { re: /manufactured\s*(?:and|&)\s*packed\s*by/, role: "manufacturer", confidence: 0.9 },
   { re: /manufactured\s*(?:by|at|in)/, role: "manufacturer", confidence: 0.9 },
@@ -64,8 +68,10 @@ export function normalizeLabelText(value: string): string {
     .trim();
 }
 
-const ADDRESS_HINT = /\d{6}\b|road|street|st\.|nagar|estate|industrial|plot|phase|dist|district|tal\.|village|city|state|india|pin\b|p\.o|sector|block|floor/i;
-const STOP_LINE = /^(net\s|mrp|m\.r\.p|price|best\s*before|use\s*by|mfg|pkd|batch|lot|ingredients|fssai|customer|consumer|for\s+queries|email|www)/i;
+const ADDRESS_HINT =
+  /\d{6}\b|road|street|st\.|nagar|estate|industrial|plot|phase|dist|district|tal\.|village|city|state|india|pin\b|p\.o|sector|block|floor/i;
+const STOP_LINE =
+  /^(net\s|mrp|m\.r\.p|price|best\s*before|use\s*by|mfg|pkd|batch|lot|ingredients|fssai|customer|consumer|for\s+queries|email|www)/i;
 
 function splitNameAddress(raw: string): { name: string | null; address: string | null } {
   const parts = raw
@@ -90,7 +96,12 @@ export function extractEntityDeclarations(lines: string[]): EntityDeclaration[] 
     let best: { marker: Marker; match: RegExpMatchArray } | null = null;
     for (const marker of MARKERS) {
       const match = normalized.match(marker.re);
-      if (match && (!best || (match.index ?? 0) < (best.match.index ?? 0) || match[0].length > best.match[0].length)) {
+      if (
+        match &&
+        (!best ||
+          (match.index ?? 0) < (best.match.index ?? 0) ||
+          match[0].length > best.match[0].length)
+      ) {
         if (!best || match[0].length > best.match[0].length) best = { marker, match };
       }
     }
@@ -103,12 +114,20 @@ export function extractEntityDeclarations(lines: string[]): EntityDeclaration[] 
     const inOriginal = lines[i].match(loose);
     let value = "";
     if (inOriginal && inOriginal.index !== undefined) {
-      value = lines[i].slice(inOriginal.index + inOriginal[0].length).replace(/^[\s:.\-–—]+/, "").trim();
+      value = lines[i]
+        .slice(inOriginal.index + inOriginal[0].length)
+        .replace(/^[\s:.-–—]+/, "")
+        .trim();
     } else {
       const tailNorm = normalized
         .slice((best.match.index ?? 0) + best.match[0].length)
-        .replace(/^[\s:.\-]+/, "");
-      value = tailNorm ? lines[i].slice(-tailNorm.length).replace(/^[\s:.\-]+/, "").trim() : "";
+        .replace(/^[\s:.-]+/, "");
+      value = tailNorm
+        ? lines[i]
+            .slice(-tailNorm.length)
+            .replace(/^[\s:.-]+/, "")
+            .trim()
+        : "";
     }
     if (value.length < 3) value = "";
 
@@ -147,8 +166,7 @@ export function declarationFor(
   role: EntityRole,
 ): EntityDeclaration | null {
   return (
-    declarations
-      .filter((d) => d.role === role)
-      .sort((a, b) => b.confidence - a.confidence)[0] ?? null
+    declarations.filter((d) => d.role === role).sort((a, b) => b.confidence - a.confidence)[0] ??
+    null
   );
 }

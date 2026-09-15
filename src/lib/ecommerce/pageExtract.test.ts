@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { extractProductPageData, hasUsefulProductInfo, productPageToText } from "./pageExtract.server";
+import {
+  extractProductPageData,
+  hasUsefulProductInfo,
+  productPageToText,
+} from "./pageExtract.server";
 import { UrlFetchError, validateProductUrl } from "./urlFetch.server";
 
 const HTML = `<!doctype html><html><head>
