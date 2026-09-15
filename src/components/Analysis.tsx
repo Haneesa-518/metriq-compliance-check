@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
+export const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
   COMPLIANT: "NO SCREENING ISSUES DETECTED",
   NON_COMPLIANT: "POTENTIAL NON-COMPLIANCE",
   NEEDS_REVIEW: "MANUAL REVIEW RECOMMENDED",
