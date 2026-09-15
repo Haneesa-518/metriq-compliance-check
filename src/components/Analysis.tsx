@@ -21,10 +21,10 @@ const OVERALL_LABEL: Record<AnalysisRecord["summary"]["overall"], string> = {
 };
 
 export const SCORE_DISCLAIMER =
-  "Automated screening coverage — not a legal compliance determination.";
+  "Automated screening coverage.";
 
 export const SCREENING_DISCLAIMER =
-  "AI-assisted screening prototype. Results indicate information detected or not detected in the submitted source and do not constitute a legal determination. Final verification must be performed by a qualified human authority.";
+  "AI-assisted screening. Results indicate information detected or not detected. Final verification must be performed by a qualified Legal authority.";
 
 export function ComplianceSummaryCard({ summary }: { summary: AnalysisRecord["summary"] }) {
   const tone = summary.overall === "COMPLIANT" ? "text-pass" : "text-review";
